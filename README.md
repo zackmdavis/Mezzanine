@@ -7,3 +7,7 @@ Instead of the complicated triangle science of Zendo proper, let's start by cons
 ... _except_ that can't be the right conceptual model. If the master's rule is "A number has the Buddha-nature iff it is divisible by 6", then it's impossible to falsify the hypothesis that _n_ = 2 because that hypothesis is in fact _true_. We need to be able to express the idea that "_n_ = 2" isn't a _sufficient_ answer. ... no, never mind, I think I was right the first time, and then I confused myself, and then I just unconfused myself by happening to use the word "sufficient". Remember I said _iff_ with two _f_s: that means necessary _and_ sufficient conditions. So a number that is divisible by 2 and yet does not have the Buddha-nature would falsify the _n_ = 2 hypothesis.
 
 But then where do my uneven prior probabilities come from, if anywhere?
+
+<hr>
+
+Inspired by [compwron/mez](https://github.com/compwron/mez).
