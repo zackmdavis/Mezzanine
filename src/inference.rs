@@ -5,14 +5,14 @@ use std::process::Command;
 use std::hash::Hash;
 use std::cmp::Eq;
 use std::iter::FromIterator;
-
+use std::f64::NEG_INFINITY;
 
 static PRIMES: [u8; 25] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
                            43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
 
-type Study = u8;
+pub type Study = u8;
 
-trait Hypothesis {
+pub trait Hypothesis {
     fn predicts_the_property(&self, study: Study) -> bool;
 }
 
@@ -33,7 +33,7 @@ impl Hypothesis for DivisibilityHypothesis {
     }
 }
 
-struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
+pub struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
 
 impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     pub fn new() -> Self {
@@ -78,7 +78,7 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
             }).sum()
     }
 
-    pub fn updated(&mut self, study: Study, verdict: bool) -> Self {
+    pub fn updated(&self, study: Study, verdict: bool) -> Self {
         let normalization_factor = 1.0/self.predict(study, verdict);
         let rebacking_pairs = self.backing()
             .into_iter().filter(|hp| {
@@ -90,6 +90,29 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
             });
         let rebacking = HashMap::from_iter(rebacking_pairs);
         Distribution(rebacking)
+    }
+
+    #[allow(unused_parens)]
+    pub fn value_of_information(&self, study: Study) -> f64 {
+        let given_the_property = self.updated(study, true);
+        let given_the_negation = self.updated(study, false);
+        let expected_entropy = (
+            self.predict(study, true) * given_the_property.entropy() +
+                self.predict(study, false) * given_the_negation.entropy());
+        self.entropy() - expected_entropy
+    }
+
+    pub fn burning_question(&self, studies: Vec<Study>) -> Option<Study> {
+        let mut top_value = NEG_INFINITY;
+        let mut best_subject: Option<Study> = None;
+        for study in &studies {
+            let value = self.value_of_information(*study);
+            if value > top_value {
+                top_value = value;
+                best_subject = Some(*study);
+            }
+        }
+        best_subject
     }
 
 }
@@ -131,7 +154,7 @@ mod tests {
         // equally likely.
         let hypotheses = vec![2, 3, 5, 7, 11].iter().map(
             |n| DivisibilityHypothesis::new(*n)).collect::<Vec<_>>();
-        let mut prior = Distribution::ignorance_prior(hypotheses);
+        let prior = Distribution::ignorance_prior(hypotheses);
 
         // If we learn that 15 does not have the property, then the 3
         // and 5 hypotheses are eliminated, and instead we think that
@@ -155,5 +178,13 @@ mod tests {
         assert_eq!(beliefs.predict(14, true), 2./3.);
     }
 
+    #[test]
+    fn concerning_what_to_ask_about() {
+        let hypotheses = (1..100u8).map(
+            |n| DivisibilityHypothesis::new(n)).collect::<Vec<_>>();
+        let prior = Distribution::ignorance_prior(hypotheses);
+
+        assert_eq!(prior.burning_question(vec![57, 60]).unwrap(), 60);
+    }
 
 }
