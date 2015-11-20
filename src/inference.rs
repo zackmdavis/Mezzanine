@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::hash::Hash;
 use std::cmp::Eq;
+use std::iter::FromIterator;
+
 
 static PRIMES: [u8; 25] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
                            43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
@@ -33,24 +35,63 @@ impl Hypothesis for DivisibilityHypothesis {
 
 struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
 
-impl<H: Hypothesis + Hash + Eq> Distribution<H> {
-    pub fn map(&self) -> &HashMap<H, f64> {
+impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
+    pub fn new() -> Self {
+        let backing = HashMap::<H, f64>::new();
+        Distribution(backing)
+    }
+
+    pub fn ignorance_prior(hypotheses: Vec<H>) -> Self {
+        let mut backing = HashMap::<H, f64>::new();
+        let probability_each: f64 = 1.0/(hypotheses.len() as f64);
+        for hypothesis in hypotheses.into_iter() {
+            backing.insert(hypothesis, probability_each);
+        }
+        Distribution(backing)
+    }
+
+    fn backing(&self) -> &HashMap<H, f64> {
         &self.0
     }
 
+    fn mut_backing(&mut self) -> &mut HashMap<H, f64> {
+        &mut self.0
+    }
+
+    pub fn belief(&self, hypothesis: H) -> f64 {
+        *self.backing().get(&hypothesis).unwrap_or(&0.0f64)
+    }
+
     pub fn entropy(&self) -> f64 {
-        self.map().values().map(|p| -p * p.log2()).sum()
+        self.backing().values().map(|p| -p * p.log2()).sum()
     }
 
-    #[cfg(TODO_make_this_compile)]
     pub fn predict(&self, study: Study, verdict: bool) -> f64 {
-        self.map().iter()
-            .filter(|h, p| h.predicts_the_property(study) == verdict)
-            .map(|_h, p| p).sum()
+        self.backing().iter()
+            .filter(|hp| {
+                let h = hp.0;
+                h.predicts_the_property(study) == verdict
+            })
+            .map(|hp| {
+                let p = hp.1;
+                p
+            }).sum()
     }
 
-    #[cfg(TODO)]
-    pub fn update(&self, study: Study, verdict: bool) -> Self {}
+    pub fn updated(&mut self, study: Study, verdict: bool) -> Self {
+        let normalization_factor = 1.0/self.predict(study, verdict);
+        let rebacking_pairs = self.backing()
+            .into_iter().filter(|hp| {
+                let h = hp.0;
+                h.predicts_the_property(study) == verdict
+            }).map(|hp| {
+                let (h, p) = hp;
+                (*h, normalization_factor * p)
+            });
+        let rebacking = HashMap::from_iter(rebacking_pairs);
+        Distribution(rebacking)
+    }
+
 }
 
 
@@ -75,12 +116,44 @@ pub fn divisibility_priors() -> HashMap<DivisibilityHypothesis, f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::factorize_on_system;
+    use super::{DivisibilityHypothesis, Distribution, factorize_on_system};
 
     #[test]
     fn concerning_factorizing_on_the_system() {
         assert_eq!(vec![2, 2, 3, 5], factorize_on_system(60));
         assert_eq!(vec![2, 5, 5], factorize_on_system(50));
     }
+
+    #[test]
+    fn concerning_updating_your_bayesian_distribution() {
+        // Suppose we think the hypotheses "A number has the property
+        // iff it is divisible by n" for n in {2, 3, 5, 7, 11} are all
+        // equally likely.
+        let hypotheses = vec![2, 3, 5, 7, 11].iter().map(
+            |n| DivisibilityHypothesis::new(*n)).collect::<Vec<_>>();
+        let mut prior = Distribution::ignorance_prior(hypotheses);
+
+        // If we learn that 15 does not have the property, then the 3
+        // and 5 hypotheses are eliminated, and instead we think that
+        // n = 2, 7, or 11 are equally likely.
+        let beliefs = prior.updated(15, false);
+
+        let probability_n_is_two = beliefs.belief(
+            DivisibilityHypothesis::new(2));
+        let probability_n_is_seven = beliefs.belief(
+            DivisibilityHypothesis::new(7));
+        let probability_n_is_eleven = beliefs.belief(
+            DivisibilityHypothesis::new(11));
+
+        let one_third: f64 = 1./3.;
+        assert_eq!(probability_n_is_two, one_third);
+        assert_eq!(probability_n_is_seven, one_third);
+        assert_eq!(probability_n_is_eleven, one_third);
+
+        // And we think that 14 has a 2/3 chance of having the
+        // property.
+        assert_eq!(beliefs.predict(14, true), 2./3.);
+    }
+
 
 }
