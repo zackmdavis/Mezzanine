@@ -1,9 +1,9 @@
 #![feature(iter_arith)]
 
-mod hypothesis_space;
+mod inference;
 
 #[cfg(not(test))]
 fn main() {
     println!("Hello Mezzanine world!");
-    hypothesis_space::divisibility_priors();
+    inference::divisibility_priors();
 }
