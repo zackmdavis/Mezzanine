@@ -12,7 +12,9 @@ pub type Study = u16;
 
 pub trait Hypothesis {
     fn predicts_the_property(&self, study: Study) -> bool;
+    fn description(&self) -> String;
 }
+
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct DivisibilityHypothesis {
@@ -29,7 +31,77 @@ impl Hypothesis for DivisibilityHypothesis {
     fn predicts_the_property(&self, study: Study) -> bool {
         study % self.n == 0
     }
+
+    fn description(&self) -> String {
+        format!("it is divisible by {}", self.n)
+    }
 }
+
+
+pub struct BoundednessHypothesis {
+    pub lower: Option<u16>,
+    pub upper: Option<u16>
+}
+
+impl BoundednessHypothesis {
+    pub fn new(lower: Study, upper: Study) -> Self {
+        BoundednessHypothesis { lower: Some(lower), upper: Some(upper) }
+    }
+    pub fn new_lower(lower: Study) -> Self {
+        BoundednessHypothesis { lower: Some(lower), upper: None }
+    }
+    pub fn new_upper(upper: Study) -> Self {
+        BoundednessHypothesis { lower: None, upper: Some(upper) }
+    }
+}
+
+impl Hypothesis for BoundednessHypothesis {
+    fn predicts_the_property(&self, study: Study) -> bool {
+        if let Some(min) = self.lower {
+            if study < min {
+                return false;
+            }
+        }
+        if let Some(max) = self.upper {
+            if study > max {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn description(&self) -> String {
+        let mut described: Vec<String> = Vec::new();
+        if let Some(min) = self.lower {
+            described.push(format!("it is not less than {}", min));
+        }
+        if self.lower.is_some() && self.upper.is_some() {
+            described.push("and".to_owned());
+        }
+        if let Some(max) = self.upper {
+            described.push(format!("it is not greater than {}", max));
+        }
+        described.join(" ")
+    }
+}
+
+
+pub struct ConjunctiveHypothesis {
+    pub this: Box<Hypothesis>,
+    pub that: Box<Hypothesis>
+}
+
+impl Hypothesis for ConjunctiveHypothesis {
+    fn predicts_the_property(&self, study: Study) -> bool {
+        self.this.predicts_the_property(study) &&
+            self.that.predicts_the_property(study)
+    }
+
+    fn description(&self) -> String {
+        format!("{} and {}", self.this.description(), self.that.description())
+    }
+}
+
 
 pub struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
 
@@ -98,17 +170,18 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         Distribution(rebacking)
     }
 
-    #[allow(unused_parens)]
     pub fn value_of_information(&self, study: Study) -> f64 {
         let given_the_property = self.updated(study, true);
         let given_the_negation = self.updated(study, false);
-        let expected_entropy = (
+        let expected_entropy =
             self.predict(study, true) * given_the_property.entropy() +
-                self.predict(study, false) * given_the_negation.entropy());
+            self.predict(study, false) * given_the_negation.entropy();
         self.entropy() - expected_entropy
     }
 
     pub fn burning_question(&self, studies: Vec<Study>) -> Option<Study> {
+        // CONSIDER: maybe this should just return a Study, and
+        // panic if the distribution is empty?
         let mut top_value = NEG_INFINITY;
         let mut best_subject: Option<Study> = None;
         for study in &studies {

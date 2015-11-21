@@ -3,7 +3,7 @@ use std::io::Write;
 
 use argparse::{ArgumentParser, Store};
 
-use inference::{Distribution, DivisibilityHypothesis};
+use inference::{Distribution, DivisibilityHypothesis, Hypothesis};
 
 
 pub fn play() {
@@ -18,16 +18,16 @@ pub fn play() {
         arg_parser.parse_args_or_exit();
     }
 
-    println!("\nWelcome to Mezzanine! Privately think of a criterion of \n\
-              the form \"A natural number has the property iff it is \n\
-              divisible by n\" for some n between 1 and {}. This \n\
-              program will attempt to efficiently infer n by asking \n\
-              you whether specific numbers do or do not have the \n\
-              property.\n\n", bound);
+    println!("\nWelcome to Mezzanine v. {}! Privately think of a criterion \n\
+              (XXX TODO: specify allowable criteria in this help copy). \n\
+              This program will attempt to efficiently infer the nature \n\
+              of the criterion by asking you whether specific numbers do \n\
+              or do not have the property.\n\n", env!("CARGO_PKG_VERSION"));
 
     let studies = (1..bound).collect::<Vec<_>>();
     let hypotheses = studies.iter()
         .map(|n| DivisibilityHypothesis::new(*n)).collect::<Vec<_>>();
+
     let mut beliefs = Distribution::ignorance_prior(hypotheses);
 
     loop {
@@ -51,7 +51,7 @@ pub fn play() {
                         Some('Y') | Some('y') => Some(true),
                         Some('N') | Some('n') => Some(false),
                         _ => {
-                            println!("Answer Y or n. You must comply.");
+                            println!("\nAnswer Y or n. You must comply.");
                             continue;
                         },
                     };
@@ -63,7 +63,7 @@ pub fn play() {
             }
             Some(known_truth) => {
                 println!("This program infers that a natural number has the \
-                          property if n = {}", known_truth.n);
+                          property iff {}.", known_truth.description());
                 return;
             }
         }
