@@ -7,10 +7,8 @@ use std::cmp::Eq;
 use std::iter::FromIterator;
 use std::f64::NEG_INFINITY;
 
-static PRIMES: [u8; 25] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41,
-                           43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
 
-pub type Study = u8;
+pub type Study = u16;
 
 pub trait Hypothesis {
     fn predicts_the_property(&self, study: Study) -> bool;
@@ -18,11 +16,11 @@ pub trait Hypothesis {
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct DivisibilityHypothesis {
-    pub n: u8
+    pub n: u16
 }
 
 impl DivisibilityHypothesis {
-    pub fn new(n: u8) -> Self {
+    pub fn new(n: u16) -> Self {
         DivisibilityHypothesis { n: n }
     }
 }
@@ -111,8 +109,6 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     }
 
     pub fn burning_question(&self, studies: Vec<Study>) -> Option<Study> {
-        // XXX TODO: we should get `studies` from the backing keys; it's
-        // not really an external argument
         let mut top_value = NEG_INFINITY;
         let mut best_subject: Option<Study> = None;
         for study in &studies {
@@ -128,7 +124,7 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
 }
 
 
-fn factorize_on_system(k: u8) -> Vec<u8> {
+fn factorize_on_system(k: u16) -> Vec<u16> {
     let stdout = Command::new("/usr/bin/factor").arg(format!("{}", k))
         .output().ok().expect("couldn't factor").stdout;
     let output = String::from_utf8(stdout).ok().expect("couldn't decode");
@@ -136,7 +132,7 @@ fn factorize_on_system(k: u8) -> Vec<u8> {
     let output_parts = trimmed_output.split(": ");
     let output_result = output_parts.skip(1).next().unwrap();
     output_result.split(' ').map(
-        |c| { c.parse::<u8>().ok().unwrap() }).collect::<Vec<_>>()
+        |c| { c.parse::<u16>().ok().unwrap() }).collect::<Vec<_>>()
 }
 
 
@@ -183,7 +179,7 @@ mod tests {
 
     #[test]
     fn concerning_what_to_ask_about() {
-        let hypotheses = (1..100u8).map(
+        let hypotheses = (1..100u16).map(
             |n| DivisibilityHypothesis::new(n)).collect::<Vec<_>>();
         let prior = Distribution::ignorance_prior(hypotheses);
 

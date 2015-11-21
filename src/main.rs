@@ -15,7 +15,7 @@ use inference::{Distribution, DivisibilityHypothesis};
 
 #[cfg(not(test))]
 fn main() {
-    let mut bound: u8 = 100;
+    let mut bound: u16 = 100;
     {
         let mut arg_parser = ArgumentParser::new();
         arg_parser.set_description("Mezzanine: a guessing game");
