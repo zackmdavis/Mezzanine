@@ -16,9 +16,9 @@ pub trait Hypothesis {
     fn predicts_the_property(&self, study: Study) -> bool;
 }
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct DivisibilityHypothesis {
-    n: u8
+    pub n: u8
 }
 
 impl DivisibilityHypothesis {
@@ -66,6 +66,14 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         self.backing().values().map(|p| -p * p.log2()).sum()
     }
 
+    pub fn completely_certain(&self) -> Option<H> {
+        if self.backing().len() != 1 {
+            None
+        } else {
+            Some(*self.backing().keys().nth(0).expect("should have one entry"))
+        }
+    }
+
     pub fn predict(&self, study: Study, verdict: bool) -> f64 {
         self.backing().iter()
             .filter(|hp| {
@@ -103,6 +111,8 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     }
 
     pub fn burning_question(&self, studies: Vec<Study>) -> Option<Study> {
+        // XXX TODO: we should get `studies` from the backing keys; it's
+        // not really an external argument
         let mut top_value = NEG_INFINITY;
         let mut best_subject: Option<Study> = None;
         for study in &studies {
@@ -127,13 +137,6 @@ fn factorize_on_system(k: u8) -> Vec<u8> {
     let output_result = output_parts.skip(1).next().unwrap();
     output_result.split(' ').map(
         |c| { c.parse::<u8>().ok().unwrap() }).collect::<Vec<_>>()
-}
-
-
-pub fn divisibility_priors() -> HashMap<DivisibilityHypothesis, f64> {
-    // TODO ???
-
-    HashMap::new()
 }
 
 
