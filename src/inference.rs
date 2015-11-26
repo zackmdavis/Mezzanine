@@ -86,12 +86,12 @@ impl Hypothesis for BoundednessHypothesis {
 }
 
 
-pub struct ConjunctiveHypothesis {
-    pub this: Box<Hypothesis>,
-    pub that: Box<Hypothesis>
+pub struct ConjunctiveHypothesis<H: Hypothesis, I: Hypothesis> {
+    pub this: Box<H>,
+    pub that: Box<I>
 }
 
-impl Hypothesis for ConjunctiveHypothesis {
+impl<H: Hypothesis, I: Hypothesis> Hypothesis for ConjunctiveHypothesis<H, I> {
     fn predicts_the_property(&self, study: Study) -> bool {
         self.this.predicts_the_property(study) &&
             self.that.predicts_the_property(study)
@@ -211,7 +211,9 @@ fn factorize_on_system(k: u16) -> Vec<u16> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DivisibilityHypothesis, Distribution, factorize_on_system};
+    use super::{BoundednessHypothesis, DivisibilityHypothesis,
+                Distribution, Hypothesis,
+                factorize_on_system};
 
     #[test]
     fn concerning_factorizing_on_the_system() {
@@ -257,6 +259,13 @@ mod tests {
         let prior = Distribution::ignorance_prior(hypotheses);
 
         assert_eq!(prior.burning_question(vec![57, 60]).unwrap(), 60);
+    }
+
+    #[test]
+    fn concerning_making_a_heterogenous_hypothesis_vector() {
+        let mut hypotheses:  Vec<Box<Hypothesis>> = Vec::new();
+        hypotheses.push(Box::new(DivisibilityHypothesis::new(2)));
+        hypotheses.push(Box::new(BoundednessHypothesis::new_lower(2)));
     }
 
 }
