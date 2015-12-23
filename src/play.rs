@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io;
 use std::io::Write;
 
@@ -18,62 +19,87 @@ pub fn play() {
         );
         arg_parser.parse_args_or_exit();
     }
-    bound += 1; // convenience with exclusive ranges
 
-    println!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
+
+    println!("Welcome to Mezzanine v. {}! Privately think of a criterion \
+              concerning natural numbers not greater than {}. \
               This program will attempt to efficiently infer the nature of \
               the criterion by asking you whether specific numbers do or do \
-              not have the property.", env!("CARGO_PKG_VERSION"));
+              not have the property of satisfying the criterion.",
+             env!("CARGO_PKG_VERSION"), bound);
 
+    bound += 1; // convenience with exclusive ranges
     let studies = (1..bound).collect::<Vec<_>>();
 
-    let divisibility_hypotheses = studies.iter()
-        .take_while(|&n| *n <= bound/2)
-        .map(|n| JoinedHypothesis::full_stop(DivisibilityHypothesis::new(*n)
-                                             .to_basic())).collect::<Vec<_>>();
-    println!("Number of divisibility hypotheses: {}",
-             divisibility_hypotheses.len());
+    let mut hypotheses = Vec::new();
 
-    let mut boundedness_hypotheses = Vec::new();
+    // divisibility
+    for divisor in 1..bound/2 {
+        hypotheses.push(JoinedHypothesis::full_stop(
+            DivisibilityHypothesis::new(divisor).to_basic()));
+    }
+
+    // boundedness
     for min in 2..bound-1 {
         for max in min..bound {
-            boundedness_hypotheses.push(
+            hypotheses.push(
                 JoinedHypothesis::full_stop(
                     BoundednessHypothesis::new(min, max).to_basic()))
         }
     }
-    println!("Number of boundedness hypotheses: {}",
-             boundedness_hypotheses.len());
 
-    let mut conjunctive_hypotheses = Vec::new();
-    for boundedness_hypothesis in &boundedness_hypotheses {
-        for divisibility_hypothesis in &divisibility_hypotheses {
-            conjunctive_hypotheses.push(
-                JoinedHypothesis::and(divisibility_hypothesis.proposition,
-                                      boundedness_hypothesis.proposition)
-            )
+    // conjunctions and disjunctions of divisibility and boundedness
+    //
+    // This approach is a little uglier for users than actually reasoning about
+    // ranges (it'll choose the first encountered of allowable bounds for a
+    // prediction, rather than the tightest bound), but it's more generalizable
+    let mut joined_predictions = HashSet::new();
+    for divisor in 1..bound/2 {
+        for min in 2..bound-1 {
+            for max in min..bound {
+                let multiples = (1..bound)
+                    .map(|i| i*divisor)
+                    .take_while(|&n| n <= bound)
+                    .collect::<HashSet<_>>();
+                let range = (min..max+1).collect::<HashSet<_>>();
+
+                let mut conjunctive_prediction = multiples.intersection(&range)
+                    .cloned().collect::<Vec<_>>();
+                conjunctive_prediction.sort();
+                let mut disjunctive_prediction = multiples.union(&range)
+                    .cloned().collect::<Vec<_>>();
+                disjunctive_prediction.sort();
+
+                let mut factor_prediction = multiples.iter()
+                    .cloned().collect::<Vec<_>>();
+                factor_prediction.sort();
+                let mut range_prediction = range.iter()
+                    .cloned().collect::<Vec<_>>();
+                range_prediction.sort();
+
+                if conjunctive_prediction != factor_prediction &&
+                        conjunctive_prediction != range_prediction &&
+                        !joined_predictions.contains(&conjunctive_prediction) {
+                    hypotheses.push(
+                        JoinedHypothesis::and(
+                            DivisibilityHypothesis::new(divisor).to_basic(),
+                            BoundednessHypothesis::new(min, max).to_basic())
+                    );
+                    joined_predictions.insert(conjunctive_prediction);
+                }
+                if disjunctive_prediction != factor_prediction &&
+                        disjunctive_prediction != range_prediction &&
+                        !joined_predictions.contains(&disjunctive_prediction) {
+                    hypotheses.push(
+                        JoinedHypothesis::or(
+                            DivisibilityHypothesis::new(divisor).to_basic(),
+                            BoundednessHypothesis::new(min, max).to_basic())
+                    );
+                    joined_predictions.insert(disjunctive_prediction);
+                }
+            }
         }
     }
-    println!("Number of conjunctive hypotheses: {}",
-             conjunctive_hypotheses.len());
-
-    let mut disjunctive_hypotheses = Vec::new();
-    for boundedness_hypothesis in &boundedness_hypotheses {
-        for divisibility_hypothesis in &divisibility_hypotheses {
-            disjunctive_hypotheses.push(
-                JoinedHypothesis::or(divisibility_hypothesis.proposition,
-                                     boundedness_hypothesis.proposition)
-            )
-        }
-    }
-    println!("Number of disjunctive hypotheses: {}",
-             disjunctive_hypotheses.len());
-
-    let mut hypotheses = Vec::new();
-    hypotheses.extend(divisibility_hypotheses);
-    hypotheses.extend(boundedness_hypotheses);
-    hypotheses.extend(conjunctive_hypotheses);
-    hypotheses.extend(disjunctive_hypotheses);
 
     let mut beliefs = Distribution::ignorance_prior(hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
