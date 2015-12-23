@@ -25,6 +25,10 @@ impl DivisibilityHypothesis {
     pub fn new(n: u16) -> Self {
         DivisibilityHypothesis { n: n }
     }
+
+    pub fn to_basic(self) -> BasicHypothesis {
+        BasicHypothesis::Divisibility(self)
+    }
 }
 
 impl Hypothesis for DivisibilityHypothesis {
@@ -53,6 +57,9 @@ impl BoundednessHypothesis {
     }
     pub fn new_upper(upper: Study) -> Self {
         BoundednessHypothesis { lower: None, upper: Some(upper) }
+    }
+    pub fn to_basic(self) -> BasicHypothesis {
+        BasicHypothesis::Boundedness(self)
     }
 }
 
@@ -93,7 +100,7 @@ pub enum BasicHypothesis {
     Boundedness(BoundednessHypothesis)
 }
 
-impl BasicHypothesis {
+impl Hypothesis for BasicHypothesis {
     fn predicts_the_property(&self, study: Study) -> bool {
         match *self {
             BasicHypothesis::Divisibility(h) => h.predicts_the_property(study),
@@ -117,14 +124,32 @@ pub enum Remainder {
 }
 
 
-// misnomer—a single conjunction or disjunction is not very general!
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-pub struct GeneralHypothesis {
+pub struct JoinedHypothesis {
     pub proposition: BasicHypothesis,
     pub remainder: Remainder
 }
 
-impl Hypothesis for GeneralHypothesis {
+impl JoinedHypothesis {
+    pub fn full_stop(hypothesis: BasicHypothesis) -> Self {
+        JoinedHypothesis { proposition: hypothesis,
+                           remainder: Remainder::FullStop }
+    }
+
+    pub fn and(first_conjunct: BasicHypothesis,
+               second_conjunct: BasicHypothesis) -> Self {
+        JoinedHypothesis { proposition: first_conjunct,
+                           remainder: Remainder::And(second_conjunct) }
+    }
+
+    pub fn or(first_disjunct: BasicHypothesis,
+              second_disjunct: BasicHypothesis) -> Self {
+        JoinedHypothesis { proposition: first_disjunct,
+                           remainder: Remainder::Or(second_disjunct) }
+    }
+}
+
+impl Hypothesis for JoinedHypothesis {
     // EXCITING TODO: these two methods have a pretty similar structure—time
     // for a macro?!
 

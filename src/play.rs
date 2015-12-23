@@ -3,7 +3,8 @@ use std::io::Write;
 
 use argparse::{ArgumentParser, Store};
 
-use inference::{Distribution, DivisibilityHypothesis, Hypothesis};
+use inference::{Distribution, DivisibilityHypothesis, Hypothesis,
+                JoinedHypothesis};
 
 
 pub fn play() {
@@ -18,15 +19,14 @@ pub fn play() {
         arg_parser.parse_args_or_exit();
     }
 
-    println!("\nWelcome to Mezzanine v. {}! Privately think of a criterion \n\
-              (XXX TODO: specify allowable criteria in this help copy). \n\
-              This program will attempt to efficiently infer the nature \n\
-              of the criterion by asking you whether specific numbers do \n\
-              or do not have the property.\n\n", env!("CARGO_PKG_VERSION"));
+    println!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
+              This program will attempt to efficiently infer the nature of \
+              the criterion by asking you whether specific numbers do or do \
+              not have the property.", env!("CARGO_PKG_VERSION"));
 
     let studies = (1..bound).collect::<Vec<_>>();
     let hypotheses = studies.iter()
-        .map(|n| DivisibilityHypothesis::new(*n)).collect::<Vec<_>>();
+        .map(|n| JoinedHypothesis::full_stop(DivisibilityHypothesis::new(*n).to_basic())).collect::<Vec<_>>();
 
     let mut beliefs = Distribution::ignorance_prior(hypotheses);
 
