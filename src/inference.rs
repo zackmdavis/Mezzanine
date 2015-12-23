@@ -87,21 +87,44 @@ impl Hypothesis for BoundednessHypothesis {
 }
 
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
-pub enum Remainder<H: Hypothesis> {
-    And(Box<H>),
-    Or(Box<H>),
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum BasicHypothesis {
+    Divisibility(DivisibilityHypothesis),
+    Boundedness(BoundednessHypothesis)
+}
+
+impl BasicHypothesis {
+    fn predicts_the_property(&self, study: Study) -> bool {
+        match *self {
+            BasicHypothesis::Divisibility(h) => h.predicts_the_property(study),
+            BasicHypothesis::Boundedness(h) => h.predicts_the_property(study)
+        }
+    }
+    fn description(&self) -> String {
+        match *self {
+            BasicHypothesis::Divisibility(h) => h.description(),
+            BasicHypothesis::Boundedness(h) => h.description()
+        }
+    }
+}
+
+
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum Remainder {
+    And(BasicHypothesis),
+    Or(BasicHypothesis),
     FullStop
 }
 
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
-pub struct GeneralHypothesis<H: Hypothesis, I: Hypothesis> {
-    pub proposition: Box<H>,
-    pub remainder: Remainder<I>
+// misnomer—a single conjunction or disjunction is not very general!
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub struct GeneralHypothesis {
+    pub proposition: BasicHypothesis,
+    pub remainder: Remainder
 }
 
-impl<H: Hypothesis, I: Hypothesis> Hypothesis for GeneralHypothesis<H, I> {
+impl Hypothesis for GeneralHypothesis {
     // EXCITING TODO: these two methods have a pretty similar structure—time
     // for a macro?!
 
