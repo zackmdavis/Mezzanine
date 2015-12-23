@@ -212,6 +212,14 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         &mut self.0
     }
 
+    pub fn len(&self) -> usize {
+        self.backing().len()
+    }
+
+    pub fn hypotheses(&self) -> Vec<&H> {
+        self.backing().keys().collect::<Vec<_>>()
+    }
+
     pub fn belief(&self, hypothesis: H) -> f64 {
         *self.backing().get(&hypothesis).unwrap_or(&0.0f64)
     }
