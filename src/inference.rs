@@ -38,6 +38,7 @@ impl Hypothesis for DivisibilityHypothesis {
 }
 
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct BoundednessHypothesis {
     pub lower: Option<u16>,
     pub upper: Option<u16>
@@ -86,19 +87,54 @@ impl Hypothesis for BoundednessHypothesis {
 }
 
 
-pub struct ConjunctiveHypothesis<H: Hypothesis, I: Hypothesis> {
-    pub this: Box<H>,
-    pub that: Box<I>
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+pub enum Remainder<H: Hypothesis> {
+    And(Box<H>),
+    Or(Box<H>),
+    FullStop
 }
 
-impl<H: Hypothesis, I: Hypothesis> Hypothesis for ConjunctiveHypothesis<H, I> {
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+pub struct GeneralHypothesis<H: Hypothesis, I: Hypothesis> {
+    pub proposition: Box<H>,
+    pub remainder: Remainder<I>
+}
+
+impl<H: Hypothesis, I: Hypothesis> Hypothesis for GeneralHypothesis<H, I> {
+    // EXCITING TODO: these two methods have a pretty similar structure—time
+    // for a macro?!
+
     fn predicts_the_property(&self, study: Study) -> bool {
-        self.this.predicts_the_property(study) &&
-            self.that.predicts_the_property(study)
+        match self.remainder {
+            Remainder::And(ref conjunct) => {
+                self.proposition.predicts_the_property(study) &&
+                    conjunct.predicts_the_property(study)
+            },
+            Remainder::Or(ref disjunct) => {
+                self.proposition.predicts_the_property(study) ||
+                    disjunct.predicts_the_property(study)
+            },
+            Remainder::FullStop => {
+                self.proposition.predicts_the_property(study)
+            }
+        }
     }
 
     fn description(&self) -> String {
-        format!("{} and {}", self.this.description(), self.that.description())
+        match self.remainder {
+            Remainder::And(ref conjunct) => {
+                format!("{} and {}", self.proposition.description(),
+                        conjunct.description())
+            },
+            Remainder::Or(ref disjunct) => {
+                format!("{} or {}", self.proposition.description(),
+                        disjunct.description())
+            },
+            Remainder::FullStop => {
+                self.proposition.description()
+            }
+        }
     }
 }
 
