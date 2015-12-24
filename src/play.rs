@@ -21,11 +21,11 @@ pub fn play() {
     }
 
 
-    println!("Welcome to Mezzanine v. {}! Privately think of a criterion \
-              concerning natural numbers not greater than {}. \
-              This program will attempt to efficiently infer the nature of \
-              the criterion by asking you whether specific numbers do or do \
-              not have the property of satisfying the criterion.",
+    wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion \
+             concerning natural numbers not greater than {}. \
+             This program will attempt to efficiently infer the nature of \
+             the criterion by asking you whether specific numbers do or do \
+             not have the property of satisfying the criterion.",
              env!("CARGO_PKG_VERSION"), bound);
 
     bound += 1; // convenience with exclusive ranges
@@ -111,7 +111,7 @@ pub fn play() {
                 let study = beliefs.burning_question(studies.clone()).unwrap();
                 let voi = beliefs.value_of_information(study);
                 if voi == 0.0 {
-                    println!("This program has inferred all that it can, and \
+                    wrapln!("This program has inferred all that it can, and \
                               is indifferent between the following hypotheses \
                               concerning when a number has the property:");
                     for hypothesis in beliefs.hypotheses() {
@@ -119,10 +119,10 @@ pub fn play() {
                     }
                     break;
                 }
-                println!("This program's belief distribution (over {} remaining \
-                          hypotheses) has an entropy of {:.3} bits. Learning \
-                          whether {} has the property is expected to reduce the \
-                          entropy by {:.3} bits.",
+                wrapln!("This program's belief distribution (over {} remaining \
+                         hypotheses) has an entropy of {:.3} bits. Learning \
+                         whether {} has the property is expected to reduce the \
+                         entropy by {:.3} bits.",
                          beliefs.len(), beliefs.entropy(), study, voi);
                 let mut verdict_maybe = None;
                 while let None = verdict_maybe {
@@ -136,19 +136,19 @@ pub fn play() {
                         Some('Y') | Some('y') => Some(true),
                         Some('N') | Some('n') => Some(false),
                         _ => {
-                            println!("\nAnswer Y or n. You must comply.");
+                            wrapln!("\nAnswer Y or n. You must comply.");
                             continue;
                         },
                     };
                 }
                 let verdict = verdict_maybe.unwrap();
-                println!("On the question of whether {} has the property, \
-                          you said {}.\n", study, verdict);
+                wrapln!("On the question of whether {} has the property, \
+                         you said {}.\n", study, verdict);
                 beliefs = beliefs.updated(study, verdict);
             }
             Some(known_truth) => {
-                println!("This program infers that a natural number has the \
-                          property iff {}.", known_truth.description());
+                wrapln!("This program infers that a natural number has the \
+                         property iff {}.", known_truth.description());
                 return;
             }
         }

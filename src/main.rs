@@ -2,6 +2,7 @@
 
 extern crate argparse;
 
+#[macro_use] mod display;
 mod inference;
 mod play;
 
