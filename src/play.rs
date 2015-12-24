@@ -6,6 +6,15 @@ use argparse::{ArgumentParser, Store};
 
 use inference::{BoundednessHypothesis, Distribution, DivisibilityHypothesis,
                 Hypothesis, JoinedHypothesis};
+use triangles::{Triangle, Color, Size};
+
+
+pub fn decorative_display_header() {
+    print!("{}\n{}\n{}\n",
+           Triangle::new(Color::Red, Size::One),
+           Triangle::new(Color::Yellow, Size::Two),
+           Triangle::new(Color::Green, Size::Three));
+}
 
 
 pub fn play() {
@@ -20,7 +29,7 @@ pub fn play() {
         arg_parser.parse_args_or_exit();
     }
 
-
+    decorative_display_header();
     wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion \
              concerning natural numbers not greater than {}. \
              This program will attempt to efficiently infer the nature of \

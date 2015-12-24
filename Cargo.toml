@@ -4,4 +4,5 @@ version = "0.2.0"
 authors = ["Zack M. Davis <code@zackmdavis.net>"]
 
 [dependencies]
+ansi_term = "0.6"
 argparse = "0.2"
