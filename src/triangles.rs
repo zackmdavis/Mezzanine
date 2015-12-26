@@ -3,6 +3,10 @@ use std::fmt;
 use ansi_term;
 
 
+/// We will classify our gloss'ry of shapes into compliance
+/// We are magical methodical apes doing triangle science
+
+
 const ONE_FORM: &'static str = "/\\\n‾‾";
 
 const TWO_FORM: &'static str = " /\\\n/  \\\n‾‾‾‾";
