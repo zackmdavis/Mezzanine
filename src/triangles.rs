@@ -69,10 +69,12 @@ impl fmt::Display for Triangle {
     }
 }
 
-
 #[allow(dead_code)]
-struct TriangleStudy {
+struct TriangleStack {
     triangles: Vec<Triangle>
 }
 
-// TODO: figure out how to render horizontally adjacent Triangles
+#[allow(dead_code)]
+struct TriangleStudy {
+    triangles: Vec<TriangleStack>
+}
