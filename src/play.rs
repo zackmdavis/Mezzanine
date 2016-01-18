@@ -4,8 +4,9 @@ use std::io::Write;
 
 use argparse::{ArgumentParser, Store};
 
-use inference::{BoundednessHypothesis, Distribution, DivisibilityHypothesis,
-                Hypothesis, JoinedHypothesis};
+use number_inference::{BoundednessHypothesis, Distribution,
+                       DivisibilityHypothesis,
+                       Hypothesis, JoinedHypothesis};
 use triangles::{Triangle, Color, Size};
 
 

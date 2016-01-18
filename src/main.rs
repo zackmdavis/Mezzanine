@@ -4,7 +4,7 @@ extern crate argparse;
 extern crate ansi_term;
 
 #[macro_use] mod display;
-mod inference;
+mod number_inference;
 mod play;
 mod triangles;
 
