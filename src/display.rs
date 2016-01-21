@@ -61,19 +61,60 @@ pub fn pack_blocks_vertically(upper_block: &str,
 }
 
 
-#[allow(unused_variables, dead_code)]
+fn vertically_pad_block(block: &str,
+                        target_height: usize, target_width: usize) -> String {
+    let natural_height = block.trim_right().split('\n')
+        .collect::<Vec<_>>().len();
+    let pad = target_height - natural_height;
+    let semipad = pad/2;
+    let remipad = if 2 * semipad < pad { 1 } else { 0 };
+    let mut padded = String::new();
+
+    fn push_padding(landing_pad: &mut String, pad: usize, line_count: usize) {
+        for padline in iter::repeat(
+            iter::repeat(' ')
+                .take(pad).collect::<String>())
+            .take(line_count) {
+                landing_pad.push_str(&padline);
+                landing_pad.push('\n');
+            }
+    }
+
+    push_padding(&mut padded, target_width, semipad);
+    padded.push_str(block);
+    padded.push('\n');
+    push_padding(&mut padded, target_width, semipad+remipad);
+    padded
+}
+
+
 pub fn pack_blocks_horizontally(left_block: &str,
                                 right_block: &str) -> String {
-    let (left_height, _left_width) = block_dimensions(left_block);
-    let (right_height, _right_width) = block_dimensions(right_block);
+    let (left_height, left_width) = block_dimensions(left_block);
+    let (right_height, right_width) = block_dimensions(right_block);
     let grand_height = cmp::max(left_height, right_height);
-    String::from("#TODO")
+
+    let mut packed = String::new();
+    for (semiline, cosemiline)
+        in vertically_pad_block(left_block.trim_right(),
+                                grand_height, left_width)
+        .split('\n')
+        .zip(vertically_pad_block(right_block.trim_right(),
+                                  grand_height, right_width)
+             .split('\n')) {
+            packed.push_str(semiline);
+            packed.push_str(cosemiline);
+            packed.push('\n');
+        }
+    packed.pop();
+    packed
 }
 
 
 #[cfg(test)]
 mod tests {
-    use super::{block_dimensions, pack_blocks_vertically};
+    use super::{block_dimensions, pack_blocks_horizontally,
+                pack_blocks_vertically};
 
     #[test]
     fn concerning_text_block_dimensions() {
@@ -90,6 +131,16 @@ mod tests {
         println!("expected_packing:\n{}", expected_packing);
         println!("actual packing:\n{}", pack_blocks_vertically(upper, lower));
         assert_eq!(expected_packing, pack_blocks_vertically(upper, lower));
+    }
+
+    #[test]
+    fn concerning_horizontal_packing() {
+        let left = "XXX\nXXX\n";
+        let right = "XX\nXX\nXX\nXX\n";
+        let expected_packing = "   XX\nXXXXX\nXXXXX\n   XX\n";
+        println!("expected_packing:\n{}", expected_packing);
+        println!("actual packing:\n{}", pack_blocks_horizontally(left, right));
+        assert_eq!(expected_packing, pack_blocks_horizontally(left, right));
     }
 
 }
