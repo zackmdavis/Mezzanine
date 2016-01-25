@@ -69,6 +69,8 @@ fn pad_line(line: &str, target_width: usize) -> String {
 
 pub fn pack_blocks_vertically(upper_block: &str,
                               lower_block: &str) -> String {
+    // XXX: there's a bug somewhere that leaves a disasterous extra space for
+    // size-three triangles in the stack
     let (_upper_height, upper_width) = block_dimensions(upper_block);
     let (_lower_height, lower_width) = block_dimensions(lower_block);
     let grand_width = cmp::max(upper_width, lower_width);

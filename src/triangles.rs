@@ -86,14 +86,12 @@ impl TriangleStack {
 
 
 impl fmt::Display for TriangleStack {
-    // XXX: there's a bug somewhere that leaves a disasterous extra space for
-    // size-three triangles in the stack
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut rendered = String::new();
-        for i in (0..self.triangles.len()).rev() {
+        for triangle in &self.triangles {
             rendered = display::pack_blocks_vertically(
-                &rendered,
-                &format!("{}", self.triangles[i])
+                &format!("{}", triangle),
+                &rendered
             );
         }
         write!(f, "{}", rendered)
