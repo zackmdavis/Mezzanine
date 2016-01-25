@@ -65,7 +65,15 @@ impl Triangle {
 
 impl fmt::Display for Triangle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.color.to_colorizer().paint(&self.size.display()))
+        let monochrome = self.size.display();
+        let mut rendered = String::new();
+        for line in monochrome.split('\n') {
+            rendered.push_str(&format!("{}", self.color
+                                       .to_colorizer().paint(line)));
+            rendered.push('\n');
+        }
+        rendered.pop();
+        write!(f, "{}", rendered)
     }
 }
 
@@ -100,5 +108,29 @@ impl fmt::Display for TriangleStack {
 
 
 pub struct TriangleStudy {
-    triangles: Vec<TriangleStack>
+    stacks: Vec<TriangleStack>
+}
+
+impl fmt::Display for TriangleStudy {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut rendered = String::new();
+        for stack in &self.stacks {
+            // XXX TODO: leave a column of air between the stacks
+            rendered = display::pack_blocks_horizontally(
+                &rendered,
+                &format!("{}", stack),
+            );
+        }
+        write!(f, "{}", rendered)
+    }
+}
+
+impl TriangleStudy {
+    pub fn new() -> Self {
+         TriangleStudy { stacks: Vec::new() }
+    }
+
+    pub fn append(&mut self, stack: TriangleStack) {
+        self.stacks.push(stack);
+    }
 }

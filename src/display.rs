@@ -113,6 +113,8 @@ fn vertically_pad_block(block: &str,
 
 pub fn pack_blocks_horizontally(left_block: &str,
                                 right_block: &str) -> String {
+    // XXX TODO: account for gravity (a shorter stack next to a larger one
+    // should start at the same floor)
     let (left_height, left_width) = block_dimensions(left_block);
     let (right_height, right_width) = block_dimensions(right_block);
     let grand_height = cmp::max(left_height, right_height);
