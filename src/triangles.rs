@@ -1,7 +1,7 @@
 use std::fmt;
 
 use ansi_term;
-
+use display;
 
 /// We will classify our gloss'ry of shapes into compliance
 /// We are magical methodical apes doing triangle science
@@ -69,12 +69,38 @@ impl fmt::Display for Triangle {
     }
 }
 
-#[allow(dead_code)]
-struct TriangleStack {
+
+pub struct TriangleStack {
     triangles: Vec<Triangle>
 }
 
-#[allow(dead_code)]
-struct TriangleStudy {
+impl TriangleStack {
+    pub fn new() -> Self {
+        TriangleStack { triangles: Vec::new() }
+    }
+
+    pub fn push(&mut self, triangle: Triangle) {
+        self.triangles.push(triangle);
+    }
+}
+
+
+impl fmt::Display for TriangleStack {
+    // XXX: there's a bug somewhere that leaves a disasterous extra space for
+    // size-three triangles in the stack
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut rendered = String::new();
+        for i in (0..self.triangles.len()).rev() {
+            rendered = display::pack_blocks_vertically(
+                &rendered,
+                &format!("{}", self.triangles[i])
+            );
+        }
+        write!(f, "{}", rendered)
+    }
+}
+
+
+pub struct TriangleStudy {
     triangles: Vec<TriangleStack>
 }

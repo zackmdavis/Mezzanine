@@ -7,14 +7,15 @@ use argparse::{ArgumentParser, Store};
 use number_inference::{BoundednessHypothesis, Distribution,
                        DivisibilityHypothesis,
                        Hypothesis, JoinedHypothesis};
-use triangles::{Triangle, Color, Size};
+use triangles::{Triangle, TriangleStack, Color, Size};
 
 
 pub fn decorative_display_header() {
-    print!("{}\n{}\n{}\n",
-           Triangle::new(Color::Red, Size::One),
-           Triangle::new(Color::Yellow, Size::Two),
-           Triangle::new(Color::Green, Size::Three));
+    let mut stack = TriangleStack::new();
+    stack.push(Triangle::new(Color::Green, Size::Three));
+    stack.push(Triangle::new(Color::Yellow, Size::Two));
+    stack.push(Triangle::new(Color::Red, Size::One));
+    println!("{}", stack);
 }
 
 

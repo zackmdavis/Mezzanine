@@ -20,12 +20,33 @@ macro_rules! wrapln {
 }
 
 
+/// length of string in chars rather than bytes and excluding ANSI escape
+/// sequences
+fn visualen(string: &str) -> usize {
+    let mut in_escape_sequence = false;
+    let mut length = 0;
+    for codepoint in string.chars() {
+        if in_escape_sequence {
+            if codepoint == 'm' {
+                in_escape_sequence = false;
+            }
+        } else {
+            if codepoint == '\u{1b}' {
+                in_escape_sequence = true;
+            } else {
+                length += 1;
+            }
+        }
+    }
+    length
+}
+
 pub fn block_dimensions(block: &str) ->  (usize, usize) {  // (height, width)
     let lines = block.trim_right().split('\n').collect::<Vec<_>>();
     let height = lines.len();
     let mut width = 0;
     for line in &lines {
-        let line_length = line.len();
+        let line_length = visualen(line);
         if line_length > width {
             width = line_length;
         }
@@ -35,7 +56,7 @@ pub fn block_dimensions(block: &str) ->  (usize, usize) {  // (height, width)
 
 
 fn pad_line(line: &str, target_width: usize) -> String {
-    let natural_width = line.len();
+    let natural_width = visualen(line);
     let pad = target_width - natural_width;
     let semipad = pad/2;
     let remipad = if 2 * semipad < pad { 1 } else { 0 };
@@ -113,7 +134,8 @@ pub fn pack_blocks_horizontally(left_block: &str,
 
 #[cfg(test)]
 mod tests {
-    use super::{block_dimensions, pack_blocks_horizontally,
+    use ansi_term;
+    use super::{block_dimensions, visualen, pack_blocks_horizontally,
                 pack_blocks_vertically};
 
     #[test]
@@ -141,6 +163,16 @@ mod tests {
         println!("expected_packing:\n{}", expected_packing);
         println!("actual packing:\n{}", pack_blocks_horizontally(left, right));
         assert_eq!(expected_packing, pack_blocks_horizontally(left, right));
+    }
+
+    #[test]
+    fn concerning_the_length_of_strings_containing_control_codes() {
+        let codetext = format!("{}", ansi_term::Colour::Red
+                               .paint("control code"));
+        println!("colored string __repr__esentation: {:?}", &codetext);
+        println!("colored string char-acterization: {:?}",
+                 &codetext.chars().collect::<Vec<_>>());
+        assert_eq!(12, visualen(&codetext));
     }
 
 }
