@@ -39,6 +39,8 @@ pub enum Color {
     Yellow,
 }
 
+// TODO: `impl`ement fmt::Display for Color
+
 impl Color {
     fn to_colorizer(&self) -> ansi_term::Colour {
         match *self {
@@ -79,25 +81,23 @@ impl fmt::Display for Triangle {
 }
 
 
-pub struct TriangleStack {
+pub struct Stack {
     triangles: Vec<Triangle>
 }
-
 
 macro_rules! stack {
     ($($triangle:expr),*) => {
         {
-            let mut our_stack = TriangleStack::new();
+            let mut our_stack = Stack::new();
             $(our_stack.push($triangle);)*
             our_stack
         }
     }
 }
 
-
-impl TriangleStack {
+impl Stack {
     pub fn new() -> Self {
-        TriangleStack { triangles: Vec::new() }
+        Stack { triangles: Vec::new() }
     }
 
     pub fn push(&mut self, triangle: Triangle) {
@@ -105,8 +105,7 @@ impl TriangleStack {
     }
 }
 
-
-impl fmt::Display for TriangleStack {
+impl fmt::Display for Stack {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut rendered = String::new();
         for triangle in &self.triangles {
@@ -120,21 +119,21 @@ impl fmt::Display for TriangleStack {
 }
 
 
-pub struct TriangleStudy {
-    stacks: Vec<TriangleStack>
+pub struct Study {
+    stacks: Vec<Stack>
 }
 
 macro_rules! study {
     ($($stack:expr),*) => {
         {
-            let mut our_study = TriangleStudy::new();
+            let mut our_study = Study::new();
             $(our_study.append($stack);)*
             our_study
         }
     }
 }
 
-impl fmt::Display for TriangleStudy {
+impl fmt::Display for Study {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut rendered = String::new();
         for stack in &self.stacks {
@@ -148,23 +147,27 @@ impl fmt::Display for TriangleStudy {
     }
 }
 
-impl TriangleStudy {
+impl Study {
     pub fn new() -> Self {
-         TriangleStudy { stacks: Vec::new() }
+         Study { stacks: Vec::new() }
     }
 
-    pub fn append(&mut self, stack: TriangleStack) {
+    pub fn append(&mut self, stack: Stack) {
         self.stacks.push(stack);
+    }
+
+    pub fn color_count(&self, color: Color) -> usize {
+        self.into_iter().filter(|t| { t.color == color }).count()
     }
 }
 
-pub struct TriangleStudyIter<'a> {
-    study: &'a TriangleStudy,
+pub struct StudyIter<'a> {
+    study: &'a Study,
     stack_index: usize,
     triangle_index: usize
 }
 
-impl<'a> Iterator for TriangleStudyIter<'a> {
+impl<'a> Iterator for StudyIter<'a> {
     type Item = &'a Triangle;
 
     fn next(&mut self) -> Option<&'a Triangle> {
@@ -187,12 +190,12 @@ impl<'a> Iterator for TriangleStudyIter<'a> {
     }
 }
 
-impl<'a> IntoIterator for &'a TriangleStudy {
+impl<'a> IntoIterator for &'a Study {
     type Item = &'a Triangle;
-    type IntoIter = TriangleStudyIter<'a>;
+    type IntoIter = StudyIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        TriangleStudyIter {
+        StudyIter {
             study: self,
             triangle_index: 0,
             stack_index: 0
@@ -217,6 +220,17 @@ mod tests {
             triangle_count += 1;
         }
         assert_eq!(4, triangle_count);  // they're all here
+    }
+
+    #[test]
+    fn on_counting_colors() {
+        let study = study!(stack!(Triangle::new(Color::Blue, Size::Three),
+                                  Triangle::new(Color::Blue, Size::Two),
+                                  Triangle::new(Color::Blue, Size::One)),
+                           stack!(),
+                           stack!(Triangle::new(Color::Yellow, Size::Three),
+                                  Triangle::new(Color::Blue, Size::One)));
+        assert_eq!(4, study.color_count(Color::Blue));
     }
 
 }
