@@ -14,6 +14,7 @@ const TWO_FORM: &'static str = " /\\\n/  \\\n‾‾‾‾";
 const THREE_FORM: &'static str = "  /\\\n /  \\\n/    \\\n‾‾‾‾‾‾";
 
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum Size {
     One,
     Two,
@@ -30,10 +31,9 @@ impl Size {
     }
 }
 
-
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum Color {
     Red,
-    #[allow(dead_code)]
     Blue,
     Green,
     Yellow,
@@ -51,6 +51,7 @@ impl Color {
 }
 
 
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct Triangle {
     pub size: Size,
     pub color: Color
@@ -133,4 +134,74 @@ impl TriangleStudy {
     pub fn append(&mut self, stack: TriangleStack) {
         self.stacks.push(stack);
     }
+}
+
+pub struct TriangleStudyIter<'a> {
+    study: &'a TriangleStudy,
+    stack_index: usize,
+    triangle_index: usize
+}
+
+impl<'a> Iterator for TriangleStudyIter<'a> {
+    type Item = &'a Triangle;
+
+    fn next(&mut self) -> Option<&'a Triangle> {
+        match self.study.stacks.get(self.stack_index) {
+            Some(stack) => {
+                match stack.triangles.get(self.triangle_index) {
+                    Some(triangle) => {
+                        self.triangle_index += 1;
+                        Some(triangle)
+                    },
+                    None => {
+                        self.triangle_index = 0;
+                        self.stack_index += 1;
+                        self.next()
+                    },
+                }
+            },
+            None => None
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a TriangleStudy {
+    type Item = &'a Triangle;
+    type IntoIter = TriangleStudyIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TriangleStudyIter {
+            study: self,
+            triangle_index: 0,
+            stack_index: 0
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn concerning_study_iteration() {
+        // XXX: we really need to define a `study!` macro
+        let mut study = TriangleStudy::new();
+        let mut stack = TriangleStack::new();
+        stack.push(Triangle::new(Color::Blue, Size::Three));
+        stack.push(Triangle::new(Color::Red, Size::One));
+        study.append(stack);
+        let mut another_stack = TriangleStack::new();
+        another_stack.push(Triangle::new(Color::Green, Size::Two));
+        another_stack.push(Triangle::new(Color::Yellow, Size::One));
+        study.append(another_stack);
+
+        let mut triangle_count = 0;
+        for triangle in &study {
+            println!("{:?}", triangle);
+            triangle_count += 1;
+        }
+        assert_eq!(4, triangle_count);  // they're all here
+    }
+
 }
