@@ -7,7 +7,7 @@ use std::iter::FromIterator;
 use std::f64::NEG_INFINITY;
 
 
-use triangles::{Color, Study};
+use triangles::{Color, Size, Study};
 
 
 pub trait Hypothesis {
@@ -16,15 +16,15 @@ pub trait Hypothesis {
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
-pub struct ColorBoundednessHypothesis {
+pub struct ColorCountBoundednessHypothesis {
     pub color: Color,
     pub lower: Option<usize>,
     pub upper: Option<usize>
 }
 
-impl ColorBoundednessHypothesis {
+impl ColorCountBoundednessHypothesis {
     pub fn new(color: Color, lower: usize, upper: usize) -> Self {
-        ColorBoundednessHypothesis {
+        ColorCountBoundednessHypothesis {
             color: color,
             lower: Some(lower),
             upper: Some(upper)
@@ -32,7 +32,7 @@ impl ColorBoundednessHypothesis {
     }
 
     pub fn new_lower(color: Color, lower: usize) -> Self {
-        ColorBoundednessHypothesis {
+        ColorCountBoundednessHypothesis {
             color: color,
             lower: Some(lower),
             upper: None
@@ -40,7 +40,7 @@ impl ColorBoundednessHypothesis {
     }
 
     pub fn new_upper(color: Color, upper: usize) -> Self {
-        ColorBoundednessHypothesis {
+        ColorCountBoundednessHypothesis {
             color: color,
             lower: None,
             upper: Some(upper)
@@ -48,7 +48,8 @@ impl ColorBoundednessHypothesis {
     }
 }
 
-impl Hypothesis for ColorBoundednessHypothesis {
+
+impl Hypothesis for ColorCountBoundednessHypothesis {
     fn predicts_the_property(&self, study: &Study) -> bool {
         let color_count = study.color_count(self.color);
         if let Some(min) = self.lower {
@@ -77,6 +78,113 @@ impl Hypothesis for ColorBoundednessHypothesis {
             described.push(format!("is not greater than {}", max));
         }
         described.join(" ")
+    }
+}
+
+
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub struct SizeCountBoundednessHypothesis {
+    pub size: Size,
+    pub lower: Option<usize>,
+    pub upper: Option<usize>
+}
+
+impl SizeCountBoundednessHypothesis {
+    pub fn new(size: Size, lower: usize, upper: usize) -> Self {
+        SizeCountBoundednessHypothesis {
+            size: size,
+            lower: Some(lower),
+            upper: Some(upper)
+        }
+    }
+
+    pub fn new_lower(size: Size, lower: usize) -> Self {
+        SizeCountBoundednessHypothesis {
+            size: size,
+            lower: Some(lower),
+            upper: None
+        }
+    }
+
+    pub fn new_upper(size: Size, upper: usize) -> Self {
+        SizeCountBoundednessHypothesis {
+            size: size,
+            lower: None,
+            upper: Some(upper)
+        }
+    }
+}
+
+
+impl Hypothesis for SizeCountBoundednessHypothesis {
+    fn predicts_the_property(&self, study: &Study) -> bool {
+        let size_count = study.size_count(self.size);
+        if let Some(min) = self.lower {
+            if size_count < min {
+                return false;
+            }
+        }
+        if let Some(max) = self.upper {
+            if size_count > max {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn description(&self) -> String {
+        let mut described: Vec<String> = vec![
+            format!("the number of size-{:?} triangles", self.size)];
+        if let Some(min) = self.lower {
+            described.push(format!("is not less than {}", min));
+        }
+        if self.lower.is_some() && self.upper.is_some() {
+            described.push("and".to_owned());
+        }
+        if let Some(max) = self.upper {
+            described.push(format!("is not greater than {}", max));
+        }
+        described.join(" ")
+    }
+}
+
+
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum BasicHypothesis {
+    ColorCountBoundedness(ColorCountBoundednessHypothesis),
+    SizeCountBoundedness(SizeCountBoundednessHypothesis)
+}
+
+impl From<ColorCountBoundednessHypothesis> for BasicHypothesis {
+    fn from(h: ColorCountBoundednessHypothesis) -> Self {
+        BasicHypothesis::ColorCountBoundedness(h)
+    }
+}
+
+impl From<SizeCountBoundednessHypothesis> for BasicHypothesis {
+    fn from(h: SizeCountBoundednessHypothesis) -> Self {
+        BasicHypothesis::SizeCountBoundedness(h)
+    }
+}
+
+
+impl Hypothesis for BasicHypothesis {
+    // XXX: the amount of boilerplate quasi-duplicated code in this project is
+    // out of control; it remains to be seen how much of it can be gotten under
+    // control with macros and a better understanding of how to use Rust
+    fn predicts_the_property(&self, study: &Study) -> bool {
+        match *self {
+            BasicHypothesis::ColorCountBoundedness(h) =>
+                h.predicts_the_property(study),
+            BasicHypothesis::SizeCountBoundedness(h) =>
+                h.predicts_the_property(study)
+        }
+    }
+    fn description(&self) -> String {
+        match *self {
+            BasicHypothesis::ColorCountBoundedness(h) => h.description(),
+            BasicHypothesis::SizeCountBoundedness(h) => h.description()
+        }
     }
 }
 
@@ -195,7 +303,7 @@ mod tests {
         // alternatives.
         let hypotheses = vec![Color::Red, Color::Green,
                               Color::Blue, Color::Yellow].iter()
-            .map(|&c| ColorBoundednessHypothesis::new_lower(c, 1))
+            .map(|&c| ColorCountBoundednessHypothesis::new_lower(c, 1))
             .collect::<Vec<_>>();
         let prior = Distribution::ignorance_prior(hypotheses);
 
@@ -207,9 +315,9 @@ mod tests {
                            Triangle::new(Color::Yellow, Size::One))), false);
 
         let probability_c_is_blue = beliefs.belief(
-            ColorBoundednessHypothesis::new_lower(Color::Blue, 1));
+            ColorCountBoundednessHypothesis::new_lower(Color::Blue, 1));
         let probability_c_is_green = beliefs.belief(
-            ColorBoundednessHypothesis::new_lower(Color::Green, 1));
+            ColorCountBoundednessHypothesis::new_lower(Color::Green, 1));
 
         assert_eq!(probability_c_is_blue, 0.5);
         assert_eq!(probability_c_is_green, 0.5);

@@ -1,8 +1,10 @@
 use std::io;
 use std::io::Write;
 
-use triangles::{Color, Study};
-use inference::triangle::{ColorBoundednessHypothesis, Distribution, Hypothesis};
+use triangles::{Color, Size, Study};
+use inference::triangle::{BasicHypothesis, ColorCountBoundednessHypothesis,
+                          SizeCountBoundednessHypothesis,
+                          Distribution, Hypothesis};
 
 pub fn play() {
     wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
@@ -14,10 +16,27 @@ pub fn play() {
     let mut hypotheses = Vec::new();
     for &color in Color::iter() {
         for lower in 1..5 {
-            hypotheses.push(ColorBoundednessHypothesis::new_lower(color, lower));
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_lower(color, lower)));
         }
         for upper in 0..4 {
-            hypotheses.push(ColorBoundednessHypothesis::new_upper(color, upper));
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_upper(color, upper)));
+        }
+    }
+
+    for &size in Size::iter() {
+        for lower in 1..5 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_lower(size, lower)));
+        }
+        for upper in 0..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_upper(size, upper)));
         }
     }
 
@@ -51,7 +70,7 @@ pub fn play() {
                 beliefs.len(), beliefs.entropy(), value_of_continuing);
         let mut verdict_maybe = None;
         while let None = verdict_maybe {
-            print!("Does the study below have the property? [Y/n]\n{} \n>> ",
+            print!("Does the study below have the property? [Y/n]\n{}>> ",
                    study);
             io::stdout().flush().expect("couldn't flush stdout?!");
             let mut input_buffer = String::new();

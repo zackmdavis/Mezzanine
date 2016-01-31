@@ -203,6 +203,10 @@ impl Study {
         self.into_iter().filter(|t| { t.color == color }).count()
     }
 
+    pub fn size_count(&self, size: Size) -> usize {
+        self.into_iter().filter(|t| { t.size == size }).count()
+    }
+
     pub fn bounded_universe() -> Vec<Self> {
         // arbitrarily limit ourselves to one stack for the moment
         Stack::bounded_universe().into_iter()
