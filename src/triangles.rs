@@ -1,4 +1,5 @@
 use std::fmt;
+use std::slice;
 
 use ansi_term;
 use display;
@@ -39,6 +40,9 @@ pub enum Color {
     Yellow,
 }
 
+pub static COLORS: [Color; 4] = [
+    Color::Red, Color::Blue, Color::Green, Color::Yellow];
+
 // TODO: `impl`ement fmt::Display for Color
 
 impl Color {
@@ -49,6 +53,10 @@ impl Color {
             Color::Green => ansi_term::Colour::Green,
             Color::Yellow => ansi_term::Colour::Yellow
         }
+    }
+
+    pub fn iter() -> slice::Iter<'static, Self> {
+        COLORS.iter()
     }
 }
 

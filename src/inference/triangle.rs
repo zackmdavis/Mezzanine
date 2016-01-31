@@ -165,10 +165,8 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         self.entropy() - expected_entropy
     }
 
-    pub fn burning_question<'a>(&'a self, studies: Vec<&'a Study>)
+    pub fn burning_question<'a>(&'a self, studies: &'a [Study])
                                 -> Option<&Study> {
-        // CONSIDER: maybe this should just return a Study, and
-        // panic if the distribution is empty?
         let mut top_value = NEG_INFINITY;
         let mut best_subject = None;
         for study in studies {
