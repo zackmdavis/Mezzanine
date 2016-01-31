@@ -86,6 +86,8 @@ pub struct Stack {
 }
 
 macro_rules! stack {
+    // XXX: `stack!()` triggers unused_mut lint. I don't think vec![] does
+    // this—how does it manage?
     ($($triangle:expr),*) => {
         {
             let mut our_stack = Stack::new();

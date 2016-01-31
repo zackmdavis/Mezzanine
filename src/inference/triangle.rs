@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::cmp::Eq;
@@ -5,7 +7,7 @@ use std::iter::FromIterator;
 use std::f64::NEG_INFINITY;
 
 
-use triangles::{Color, Size, Triangle, Stack, Study};
+use triangles::{Color, Study};
 
 
 pub trait Hypothesis {
