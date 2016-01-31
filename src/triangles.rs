@@ -83,6 +83,18 @@ pub struct TriangleStack {
     triangles: Vec<Triangle>
 }
 
+
+macro_rules! stack {
+    ($($triangle:expr),*) => {
+        {
+            let mut our_stack = TriangleStack::new();
+            $(our_stack.push($triangle);)*
+            our_stack
+        }
+    }
+}
+
+
 impl TriangleStack {
     pub fn new() -> Self {
         TriangleStack { triangles: Vec::new() }
@@ -110,6 +122,16 @@ impl fmt::Display for TriangleStack {
 
 pub struct TriangleStudy {
     stacks: Vec<TriangleStack>
+}
+
+macro_rules! study {
+    ($($stack:expr),*) => {
+        {
+            let mut our_study = TriangleStudy::new();
+            $(our_study.append($stack);)*
+            our_study
+        }
+    }
 }
 
 impl fmt::Display for TriangleStudy {
@@ -185,17 +207,10 @@ mod tests {
 
     #[test]
     fn concerning_study_iteration() {
-        // XXX: we really need to define a `study!` macro
-        let mut study = TriangleStudy::new();
-        let mut stack = TriangleStack::new();
-        stack.push(Triangle::new(Color::Blue, Size::Three));
-        stack.push(Triangle::new(Color::Red, Size::One));
-        study.append(stack);
-        let mut another_stack = TriangleStack::new();
-        another_stack.push(Triangle::new(Color::Green, Size::Two));
-        another_stack.push(Triangle::new(Color::Yellow, Size::One));
-        study.append(another_stack);
-
+        let study = study!(stack!(Triangle::new(Color::Blue, Size::Three),
+                                  Triangle::new(Color::Red, Size::One)),
+                           stack!(Triangle::new(Color::Green, Size::Two),
+                                  Triangle::new(Color::Yellow, Size::One)));
         let mut triangle_count = 0;
         for triangle in &study {
             println!("{:?}", triangle);
