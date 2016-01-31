@@ -3,6 +3,7 @@ use std::slice;
 
 use ansi_term;
 use display;
+use itertools::Itertools;
 
 /// We will classify our gloss'ry of shapes into compliance
 /// We are magical methodical apes doing triangle science
@@ -22,13 +23,20 @@ pub enum Size {
     Three
 }
 
+pub static SIZES: [Size; 3] = [Size::One, Size::Two, Size::Three];
+
 impl Size {
+    // Should this be fmt::Display::fmt?
     fn display(&self) -> String {
         match *self {
             Size::One => ONE_FORM.to_owned(),
             Size::Two => TWO_FORM.to_owned(),
             Size::Three => THREE_FORM.to_owned()
         }
+    }
+
+    pub fn iter() -> slice::Iter<'static, Self> {
+        SIZES.iter()
     }
 }
 
@@ -71,6 +79,12 @@ impl Triangle {
     pub fn new(color: Color, size: Size) -> Self {
         Triangle { color: color, size: size }
     }
+
+    pub fn universe() -> Vec<Triangle> {
+        Color::iter().cartesian_product(Size::iter())
+            .map(|(&color, &size)| { Triangle::new(color, size) })
+            .collect::<Vec<_>>()
+    }
 }
 
 
@@ -89,6 +103,7 @@ impl fmt::Display for Triangle {
 }
 
 
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Stack {
     triangles: Vec<Triangle>
 }
@@ -113,6 +128,23 @@ impl Stack {
     pub fn push(&mut self, triangle: Triangle) {
         self.triangles.push(triangle);
     }
+
+    pub fn bounded_universe() -> Vec<Self> {
+        // arbitrarily limit ourselves to at most two in a stack for now
+        // pending sorely-needed clever data-structural advances
+        let mut ghost_universe = Triangle::universe().iter()
+            .map(|&t| Some(t)).collect::<Vec<_>>();
+        ghost_universe.push(None);
+
+        Triangle::universe().iter().cartesian_product(ghost_universe.iter())
+            .map(|(&bottom, &top)| {
+                let mut stack = stack!(bottom);
+                if let Some(cap) = top {
+                    stack.push(cap);
+                }
+                stack
+            }).collect::<Vec<_>>()
+    }
 }
 
 impl fmt::Display for Stack {
@@ -129,6 +161,7 @@ impl fmt::Display for Stack {
 }
 
 
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Study {
     stacks: Vec<Stack>
 }
@@ -168,6 +201,12 @@ impl Study {
 
     pub fn color_count(&self, color: Color) -> usize {
         self.into_iter().filter(|t| { t.color == color }).count()
+    }
+
+    pub fn bounded_universe() -> Vec<Self> {
+        // arbitrarily limit ourselves to one stack for the moment
+        Stack::bounded_universe().into_iter()
+            .map(|s| { study!(s) }).collect::<Vec<_>>()
     }
 }
 
@@ -241,6 +280,15 @@ mod tests {
                            stack!(Triangle::new(Color::Yellow, Size::Three),
                                   Triangle::new(Color::Blue, Size::One)));
         assert_eq!(4, study.color_count(Color::Blue));
+    }
+
+    #[test]
+    fn concerning_the_size_of_the_universe() {
+        let heavenly_sphere = Triangle::universe().len();
+        assert_eq!(12, heavenly_sphere);
+
+        let hubble_bubble = Stack::bounded_universe().len();
+        assert_eq!(156, hubble_bubble);
     }
 
 }

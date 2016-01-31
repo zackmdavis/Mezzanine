@@ -166,14 +166,14 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     }
 
     pub fn burning_question<'a>(&'a self, studies: &'a [Study])
-                                -> Option<&Study> {
+                                -> Option<Study> {
         let mut top_value = NEG_INFINITY;
         let mut best_subject = None;
         for study in studies {
-            let value = self.value_of_information(study);
+            let value = self.value_of_information(&study);
             if value > top_value {
                 top_value = value;
-                best_subject = Some(study);
+                best_subject = Some(study.clone());
             }
         }
         best_subject
