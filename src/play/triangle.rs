@@ -43,6 +43,12 @@ pub fn play() {
     let mut beliefs = Distribution::ignorance_prior(hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
+    // REMOTIVATING CONCERN: this current idea of aspiring to feed every study
+    // in the universe into `beliefs.burning_question` is a stupid holdover
+    // from the number-guessing game where it was actually feasible—all we
+    // really need is a study to pose whose value of information approaches 1
+    // bit, which we can surely get from a "reasonably" large random sample of
+    // the (very large) study space
     let studies = Study::bounded_universe();
 
     loop {
