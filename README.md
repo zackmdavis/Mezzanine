@@ -1,3 +1,10 @@
+*We will classify our gloss'ry of shapes into compliance!  
+We are magical methodical apes doing triangle science!*  
+
+---
+
+*(October 2015)*
+
 Today the Code Muse spoke to me on the train and said that I should think writing an AI for Zendo-like guessing games should be doable.
 
 We need to maintain a finite (finite _and small_—it has to fit in memory!) list of hypotheses weighted by simplicity—more constraints mean lower prior probability. Our notion of updating will have a discrete sort of Solomonoff/Popperian flavor in that each observation can only falsify or not-falsify a hypothesis—an observation can't quantitatively favor one not-definitively-falsified hypothesis over another. The interesting part of the endeavor, then, is _not_ how we update our beliefs in response to evidence, but rather, _what evidence we choose to seek out_. Given a finite and small state space of examples, we can iterate over them, considering what effect each possible answer (Yes or No) will have on some measure of the degree of "uncertainness" our distribution over hypotheses represents—that's [entropy](https://en.wikipedia.org/wiki/Entropy_%28information_theory%29), I think. The alternative that reduces entropy the most (averaged over Yes and No—with equal weight??—I don't think that's right, but pressing on—) will be our guess.
@@ -10,6 +17,12 @@ But then where do my uneven prior probabilities come from, if anywhere?
 
 —they don't. Priors are a distraction. The prior distribution represents our beliefs about the master's beliefs about the structure of the Buddha-nature. That's just not something that can be governed by the fundamental theorem of arithmetic! But the evidential impact of the master's feedback is: if we guess 79 and hear "No", we don't learn much, whereas if we guess 60 and hear "No," we can rule out _n_ being 2, 3, 5, 6, 12, or 30. So we _probably_ want to inquire about integers with a number of factors as close as possible to half the number of remaining hypotheses, for the same reason that must underlie the information-theoretic correctness of binary search.
 
-<hr>
+---
+
+*(several months later—scene: a coffeeshop welded to a bookstore on Valencia Street)*
+
+"I hate this game," I said.
+
+---
 
 Inspired by [compwron/mez](https://github.com/compwron/mez).

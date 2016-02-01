@@ -2,34 +2,12 @@ use std::collections::HashSet;
 use std::io;
 use std::io::Write;
 
-use argparse::{ArgumentParser, Store};
-
-use inference::{BoundednessHypothesis, Distribution, DivisibilityHypothesis,
-                Hypothesis, JoinedHypothesis};
-use triangles::{Triangle, Color, Size};
+use inference::number::{BoundednessHypothesis, Distribution,
+                        DivisibilityHypothesis,
+                        Hypothesis, JoinedHypothesis};
 
 
-pub fn decorative_display_header() {
-    print!("{}\n{}\n{}\n",
-           Triangle::new(Color::Red, Size::One),
-           Triangle::new(Color::Yellow, Size::Two),
-           Triangle::new(Color::Green, Size::Three));
-}
-
-
-pub fn play() {
-    let mut bound: u16 = 30;
-    {
-        let mut arg_parser = ArgumentParser::new();
-        arg_parser.set_description("Mezzanine: a guessing game");
-        arg_parser.refer(&mut bound).add_option(
-            &["--bound"], Store,
-            "the largest admissible number in the game"
-        );
-        arg_parser.parse_args_or_exit();
-    }
-
-    decorative_display_header();
+pub fn play(mut bound: u16) {
     wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion \
              concerning natural numbers not greater than {}. \
              This program will attempt to efficiently infer the nature of \

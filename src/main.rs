@@ -2,11 +2,13 @@
 
 extern crate argparse;
 extern crate ansi_term;
+extern crate itertools;
 
 #[macro_use] mod display;
-mod inference;
+#[macro_use] mod triangles;
 mod play;
-mod triangles;
+mod inference;
+
 
 use play::play;
 
