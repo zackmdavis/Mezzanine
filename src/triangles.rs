@@ -11,9 +11,9 @@ use itertools::Itertools;
 
 const ONE_FORM: &'static str = "/\\\n‾‾";
 
-const TWO_FORM: &'static str = " /\\\n/  \\\n‾‾‾‾";
+const TWO_FORM: &'static str = " /\\ \n/  \\\n‾‾‾‾";
 
-const THREE_FORM: &'static str = "  /\\\n /  \\\n/    \\\n‾‾‾‾‾‾";
+const THREE_FORM: &'static str = "  /\\  \n /  \\ \n/    \\\n‾‾‾‾‾‾";
 
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
