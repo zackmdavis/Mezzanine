@@ -9,11 +9,11 @@ use itertools::Itertools;
 /// We are magical methodical apes doing triangle science
 
 
-const ONE_FORM: &'static str = "/\\\n‾‾";
+const ONE_FORM: &'static str = "/\\ \n‾‾ ";
 
-const TWO_FORM: &'static str = " /\\ \n/  \\\n‾‾‾‾";
+const TWO_FORM: &'static str = " /\\  \n/  \\ \n‾‾‾‾ ";
 
-const THREE_FORM: &'static str = "  /\\  \n /  \\ \n/    \\\n‾‾‾‾‾‾";
+const THREE_FORM: &'static str = "  /\\   \n /  \\  \n/    \\ \n‾‾‾‾‾‾ ";
 
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
@@ -180,7 +180,6 @@ impl fmt::Display for Study {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut rendered = String::new();
         for stack in &self.stacks {
-            // XXX TODO: leave a column of air between the stacks
             rendered = display::pack_blocks_horizontally(
                 &rendered,
                 &format!("{}", stack),
@@ -208,9 +207,10 @@ impl Study {
     }
 
     pub fn bounded_universe() -> Vec<Self> {
-        // arbitrarily limit ourselves to one stack for the moment
-        Stack::bounded_universe().into_iter()
-            .map(|s| { study!(s) }).collect::<Vec<_>>()
+        Stack::bounded_universe().iter()
+            .cartesian_product(Stack::bounded_universe().iter())
+            .map(|(left, right)| { study!(left.clone(), right.clone()) })
+            .collect::<Vec<_>>()
     }
 }
 
