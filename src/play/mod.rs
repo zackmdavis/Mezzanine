@@ -4,15 +4,11 @@ mod triangle;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
 
-use triangles::{Triangle, Stack, Study, Color, Size};
+use triangles::Study;
 
 
 pub fn decorative_display_header() {
-    let mascot_study = study!(stack!(Triangle::new(Color::Green, Size::Three),
-                                     Triangle::new(Color::Yellow, Size::Two),
-                                     Triangle::new(Color::Red, Size::One)),
-                              stack!(Triangle::new(Color::Yellow, Size::Three),
-                                     Triangle::new(Color::Blue, Size::Two)));
+    let mascot_study = Study::sample();
     println!("{}", mascot_study);
 }
 

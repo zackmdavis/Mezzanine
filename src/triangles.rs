@@ -4,6 +4,7 @@ use std::slice;
 use ansi_term;
 use display;
 use itertools::Itertools;
+use rand::random;
 
 /// We will classify our gloss'ry of shapes into compliance
 /// We are magical methodical apes doing triangle science
@@ -38,6 +39,11 @@ impl Size {
     pub fn iter() -> slice::Iter<'static, Self> {
         SIZES.iter()
     }
+
+    pub fn sample() -> Self {
+        let index = random::<usize>() % 3;
+        SIZES[index]
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
@@ -66,6 +72,11 @@ impl Color {
     pub fn iter() -> slice::Iter<'static, Self> {
         COLORS.iter()
     }
+
+    pub fn sample() -> Self {
+        let index = random::<usize>() % 4;
+        COLORS[index]
+    }
 }
 
 
@@ -84,6 +95,10 @@ impl Triangle {
         Color::iter().cartesian_product(Size::iter())
             .map(|(&color, &size)| { Triangle::new(color, size) })
             .collect::<Vec<_>>()
+    }
+
+    pub fn sample() -> Self {
+        Triangle::new(Color::sample(), Size::sample())
     }
 }
 
@@ -144,6 +159,19 @@ impl Stack {
                 }
                 stack
             }).collect::<Vec<_>>()
+    }
+
+    pub fn sample() -> Self {
+        // NOTE: A uniform distribution over heights is nonuniform over
+        // possible stacks (because there are exponentially more taller
+        // stacks), but that's OK, and we probably want a bias towards simpler
+        // studies anyway
+        let height = 1 + random::<usize>() % 4;
+        let mut stack = Stack::new();
+        for _ in 0..height {
+            stack.push(Triangle::sample());
+        }
+        stack
     }
 }
 
@@ -211,6 +239,17 @@ impl Study {
             .cartesian_product(Stack::bounded_universe().iter())
             .map(|(left, right)| { study!(left.clone(), right.clone()) })
             .collect::<Vec<_>>()
+    }
+
+    pub fn sample() -> Self {
+        // Again, a uniform distribution over stack count is nonuniform over
+        // possible studies; we think it's fine!
+        let breadth = 1 + random::<usize>() % 4;
+        let mut study = Study::new();
+        for _ in 0..breadth {
+            study.append(Stack::sample());
+        }
+        study
     }
 }
 

@@ -3,6 +3,7 @@
 extern crate argparse;
 extern crate ansi_term;
 extern crate itertools;
+extern crate rand;
 
 #[macro_use] mod display;
 #[macro_use] mod triangles;
