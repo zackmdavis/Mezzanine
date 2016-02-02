@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Write;
 
-use triangles::{Color, Size, Study};
+use triangles::{Color, Size};
 use inference::triangle::{BasicHypothesis, ColorCountBoundednessHypothesis,
                           SizeCountBoundednessHypothesis,
                           Distribution, Hypothesis};
@@ -43,16 +43,8 @@ pub fn play() {
     let mut beliefs = Distribution::ignorance_prior(hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
-    // REMOTIVATING CONCERN: this current idea of aspiring to feed every study
-    // in the universe into `beliefs.burning_question` is a stupid holdover
-    // from the number-guessing game where it was actually feasible—all we
-    // really need is a study to pose whose value of information approaches 1
-    // bit, which we can surely get from a "reasonably" large random sample of
-    // the (very large) study space
-    let studies = Study::bounded_universe();
-
     loop {
-        let study = beliefs.burning_question(&studies).unwrap();
+        let study = beliefs.burning_question(0.95, 10000);
         let value_of_continuing = beliefs.value_of_information(&study);
         if value_of_continuing == 0.0 {
             if beliefs.len() == 1 {

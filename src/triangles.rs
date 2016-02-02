@@ -3,7 +3,6 @@ use std::slice;
 
 use ansi_term;
 use display;
-use itertools::Itertools;
 use rand::random;
 
 /// We will classify our gloss'ry of shapes into compliance
@@ -91,12 +90,6 @@ impl Triangle {
         Triangle { color: color, size: size }
     }
 
-    pub fn universe() -> Vec<Triangle> {
-        Color::iter().cartesian_product(Size::iter())
-            .map(|(&color, &size)| { Triangle::new(color, size) })
-            .collect::<Vec<_>>()
-    }
-
     pub fn sample() -> Self {
         Triangle::new(Color::sample(), Size::sample())
     }
@@ -142,23 +135,6 @@ impl Stack {
 
     pub fn push(&mut self, triangle: Triangle) {
         self.triangles.push(triangle);
-    }
-
-    pub fn bounded_universe() -> Vec<Self> {
-        // arbitrarily limit ourselves to at most two in a stack for now
-        // pending sorely-needed clever data-structural advances
-        let mut ghost_universe = Triangle::universe().iter()
-            .map(|&t| Some(t)).collect::<Vec<_>>();
-        ghost_universe.push(None);
-
-        Triangle::universe().iter().cartesian_product(ghost_universe.iter())
-            .map(|(&bottom, &top)| {
-                let mut stack = stack!(bottom);
-                if let Some(cap) = top {
-                    stack.push(cap);
-                }
-                stack
-            }).collect::<Vec<_>>()
     }
 
     pub fn sample() -> Self {
@@ -232,13 +208,6 @@ impl Study {
 
     pub fn size_count(&self, size: Size) -> usize {
         self.into_iter().filter(|t| { t.size == size }).count()
-    }
-
-    pub fn bounded_universe() -> Vec<Self> {
-        Stack::bounded_universe().iter()
-            .cartesian_product(Stack::bounded_universe().iter())
-            .map(|(left, right)| { study!(left.clone(), right.clone()) })
-            .collect::<Vec<_>>()
     }
 
     pub fn sample() -> Self {
@@ -323,15 +292,6 @@ mod tests {
                            stack!(Triangle::new(Color::Yellow, Size::Three),
                                   Triangle::new(Color::Blue, Size::One)));
         assert_eq!(4, study.color_count(Color::Blue));
-    }
-
-    #[test]
-    fn concerning_the_size_of_the_universe() {
-        let heavenly_sphere = Triangle::universe().len();
-        assert_eq!(12, heavenly_sphere);
-
-        let hubble_bubble = Stack::bounded_universe().len();
-        assert_eq!(156, hubble_bubble);
     }
 
 }

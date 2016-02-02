@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::cmp::Eq;
 use std::iter::FromIterator;
-use std::f64::NEG_INFINITY;
 
 
 use triangles::{Color, Size, Study};
@@ -273,20 +272,27 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         self.entropy() - expected_entropy
     }
 
-    pub fn burning_question<'a>(&'a self, studies: &'a [Study])
-                                -> Option<Study> {
-        let mut top_value = NEG_INFINITY;
-        let mut best_subject = None;
-        for study in studies {
-            let value = self.value_of_information(&study);
+    pub fn burning_question(&self, desired_bits: f64, sample_cap: usize)
+                            -> Study {
+        let mut study = Study::sample();
+        let mut value = self.value_of_information(&study);
+        let mut top_study = study.clone();
+        let mut top_value = value;
+        let mut samples = 1;
+        loop {
             if value > top_value {
                 top_value = value;
-                best_subject = Some(study.clone());
+                top_study = study;
             }
+            if (top_value > desired_bits) || (samples >= sample_cap) {
+                break;
+            }
+            study = Study::sample();
+            value = self.value_of_information(&study);
+            samples += 1;
         }
-        best_subject
+        top_study
     }
-
 }
 
 
