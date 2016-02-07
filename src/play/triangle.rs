@@ -2,8 +2,8 @@ use std::io;
 use std::io::Write;
 
 use triangles::{Color, Size};
-use inference::triangle::{Distribution, Hypothesis};
-use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
+use inference::triangle::{complexity_prior, Hypothesis};
+use inference::triangle::hypotheses::BasicHypothesis;
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 
@@ -19,38 +19,34 @@ pub fn play() {
     for &color in Color::iter() {
         for lower in 1..4 {
             hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        ColorCountBoundednessHypothesis::new_lower(
-                            color, lower))));
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_lower(
+                        color, lower)));
         }
         for upper in 0..3 {
             hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        ColorCountBoundednessHypothesis::new_upper(
-                            color, upper))));
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_upper(
+                        color, upper)));
         }
     }
 
     for &size in Size::iter() {
         for lower in 1..4 {
             hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        SizeCountBoundednessHypothesis::new_lower(
-                            size, lower))));
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_lower(
+                        size, lower)));
         }
         for upper in 0..3 {
             hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        SizeCountBoundednessHypothesis::new_upper(
-                            size, upper))));
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_upper(
+                        size, upper)));
         }
     }
 
-    let mut beliefs = Distribution::ignorance_prior(hypotheses);
+    let mut beliefs = complexity_prior(hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
     loop {

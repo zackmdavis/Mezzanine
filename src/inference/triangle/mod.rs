@@ -8,6 +8,8 @@ use std::cmp::Eq;
 use std::iter::FromIterator;
 
 use triangles::Study;
+use inference::triangle::hypotheses::BasicHypothesis;
+use inference::triangle::hypotheses::JoinedHypothesis;
 
 
 pub trait Hypothesis {
@@ -16,6 +18,7 @@ pub trait Hypothesis {
 }
 
 
+#[derive(Debug)]
 pub struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
 
 impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
@@ -108,7 +111,13 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         let mut top_value = value;
         let mut samples = 1;
         loop {
+            if samples % 250 == 0 { // performance debugging
+                println!("in burning_question loop: sample #{}: {:?}; \
+                          expectibits acquired: {}", samples, study, top_value);
+            }
             if value > top_value {
+                println!("secured more expectibits ({}) on sample #{}: {:?}",
+                         value, samples, top_study); // performance debugging
                 top_value = value;
                 top_study = study;
             }
@@ -124,10 +133,32 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
 }
 
 
+pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
+                                -> Distribution<JoinedHypothesis> {
+    let mut backing = HashMap::<JoinedHypothesis, f64>::new();
+    let probability_each_basic = (2./3.)/(basic_hypotheses.len() as f64);
+    let probability_each_joined = (1./3.)/(basic_hypotheses.len().pow(2) as f64);
+    for &basic in &basic_hypotheses {
+        backing.insert(JoinedHypothesis::full_stop(basic),
+                       probability_each_basic);
+    }
+    for &one_basic in &basic_hypotheses {
+        for &another_basic in &basic_hypotheses {
+            backing.insert(JoinedHypothesis::and(one_basic, another_basic),
+                           probability_each_joined);
+            backing.insert(JoinedHypothesis::or(one_basic, another_basic),
+                           probability_each_joined);
+        }
+    }
+    Distribution(backing)
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use triangles::{Color, Size, Stack, Study, Triangle};
+    use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
     use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 
     #[test]
@@ -156,6 +187,51 @@ mod tests {
 
         assert_eq!(probability_c_is_blue, 0.5);
         assert_eq!(probability_c_is_green, 0.5);
+    }
+
+    #[test]
+    fn concerning_soundness_of_our_complexity_penalty() {
+        // ⎲ ∞
+        // ⎳ i=1  1/2^i = 1
+        //
+        // So ... I want to give conjunctions and disjunctions a lower prior
+        // probability, but I'm running into the same philosophical difficulty
+        // that I ran into when I was first sketching out the number game, as
+        // accounted in the README: if the true meaning of the complexity
+        // penalty is that the hypothesis "A" gets to sum over the unspecified
+        // details borne by the more complicated hypotheses "A ∧ B" and "A ∧
+        // C", then it's not clear how this insight translates to this setting,
+        // where we want to represent our knowledge as a collection of mutually
+        // exclusive hypotheses: we don't care about being able to refine a
+        // true-but-vague theory to a true-but-more-precise theory; we want to
+        // say that the precise theory is true and that all others are false.
+        //
+        // Probably the real answer is that this game just isn't very
+        // philosophically interesting: we should have a complexity penalty to
+        // exactly the extent that we think the human property-specifiers the
+        // engine will face are going to choose disjunctions or disjunctions
+        // less often than a uniform sample over distinct hypotheses would.
+        let basics = vec![
+            BasicHypothesis::from(
+                ColorCountBoundednessHypothesis::new_lower(Color::Blue, 1)),
+            BasicHypothesis::from(
+                ColorCountBoundednessHypothesis::new_lower(Color::Red, 1))
+        ];
+        let distribution = complexity_prior(basics);
+
+        assert_eq!(1./3.,
+                   distribution.belief(JoinedHypothesis::full_stop(
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Blue, 1)))));
+        assert_eq!(1./12.,
+                   distribution.belief(JoinedHypothesis::and(
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Blue, 1)),
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Red, 1)))));
     }
 
 }
