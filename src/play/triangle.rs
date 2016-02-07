@@ -2,9 +2,11 @@ use std::io;
 use std::io::Write;
 
 use triangles::{Color, Size};
-use inference::triangle::{BasicHypothesis, ColorCountBoundednessHypothesis,
-                          SizeCountBoundednessHypothesis,
-                          Distribution, Hypothesis};
+use inference::triangle::{Distribution, Hypothesis};
+use inference::triangle::hypotheses::BasicHypothesis;
+use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
+use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
+
 
 pub fn play() {
     wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
