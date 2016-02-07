@@ -142,7 +142,7 @@ impl Stack {
         // possible stacks (because there are exponentially more taller
         // stacks), but that's OK, and we probably want a bias towards simpler
         // studies anyway
-        let height = 1 + random::<usize>() % 4;
+        let height = 1 + random::<usize>() % 3;
         let mut stack = Stack::new();
         for _ in 0..height {
             stack.push(Triangle::sample());
@@ -213,7 +213,7 @@ impl Study {
     pub fn sample() -> Self {
         // Again, a uniform distribution over stack count is nonuniform over
         // possible studies; we think it's fine!
-        let breadth = 1 + random::<usize>() % 4;
+        let breadth = 1 + random::<usize>() % 3;
         let mut study = Study::new();
         for _ in 0..breadth {
             study.append(Stack::sample());

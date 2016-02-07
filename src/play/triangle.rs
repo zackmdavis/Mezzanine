@@ -3,7 +3,7 @@ use std::io::Write;
 
 use triangles::{Color, Size};
 use inference::triangle::{Distribution, Hypothesis};
-use inference::triangle::hypotheses::BasicHypothesis;
+use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 
@@ -17,28 +17,36 @@ pub fn play() {
 
     let mut hypotheses = Vec::new();
     for &color in Color::iter() {
-        for lower in 1..5 {
+        for lower in 1..4 {
             hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_lower(color, lower)));
+                JoinedHypothesis::full_stop(
+                    BasicHypothesis::from(
+                        ColorCountBoundednessHypothesis::new_lower(
+                            color, lower))));
         }
-        for upper in 0..4 {
+        for upper in 0..3 {
             hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_upper(color, upper)));
+                JoinedHypothesis::full_stop(
+                    BasicHypothesis::from(
+                        ColorCountBoundednessHypothesis::new_upper(
+                            color, upper))));
         }
     }
 
     for &size in Size::iter() {
-        for lower in 1..5 {
+        for lower in 1..4 {
             hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_lower(size, lower)));
+                JoinedHypothesis::full_stop(
+                    BasicHypothesis::from(
+                        SizeCountBoundednessHypothesis::new_lower(
+                            size, lower))));
         }
-        for upper in 0..4 {
+        for upper in 0..3 {
             hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_upper(size, upper)));
+                JoinedHypothesis::full_stop(
+                    BasicHypothesis::from(
+                        SizeCountBoundednessHypothesis::new_upper(
+                            size, upper))));
         }
     }
 
