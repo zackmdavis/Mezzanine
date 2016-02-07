@@ -21,7 +21,7 @@ macro_rules! wrapln {
 
 
 /// length of string in chars rather than bytes and excluding ANSI escape
-/// sequences
+/// sequences and a non-spacing mark that we happen to use
 fn visualen(string: &str) -> usize {
     let mut in_escape_sequence = false;
     let mut length = 0;
@@ -34,7 +34,10 @@ fn visualen(string: &str) -> usize {
             if codepoint == '\u{1b}' {
                 in_escape_sequence = true;
             } else {
-                length += 1;
+                // exclude non-spacing mark COMBINING DOT BELOW
+                if codepoint != '\u{0323}' {
+                    length += 1;
+                }
             }
         }
     }
