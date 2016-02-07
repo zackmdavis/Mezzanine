@@ -201,8 +201,11 @@ pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
         backing.insert(JoinedHypothesis::full_stop(basic),
                        probability_each_basic);
     }
-    for &one_basic in &basic_hypotheses {
-        for &another_basic in &basic_hypotheses {
+    for (i, &one_basic) in basic_hypotheses.iter().enumerate() {
+        for (j, &another_basic) in basic_hypotheses.iter().enumerate() {
+            if j <= i {
+                continue;
+            }
             let conjunction = JoinedHypothesis::and(one_basic, another_basic);
             let disjunction = JoinedHypothesis::or(one_basic, another_basic);
             for &junction in &vec![conjunction, disjunction] {
