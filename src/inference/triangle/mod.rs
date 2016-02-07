@@ -7,7 +7,11 @@ use std::hash::Hash;
 use std::cmp::Eq;
 use std::iter::FromIterator;
 
-use triangles::Study;
+use triangles::{Color, Size, Study};
+use inference::triangle::hypotheses::BasicHypothesis;
+use inference::triangle::hypotheses::JoinedHypothesis;
+use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
+use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 
 
 pub trait Hypothesis {
@@ -16,6 +20,42 @@ pub trait Hypothesis {
 }
 
 
+pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
+    let mut hypotheses = Vec::new();
+    for &color in Color::iter() {
+        for lower in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_lower(
+                        color, lower)));
+        }
+        for upper in 0..3 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_upper(
+                        color, upper)));
+        }
+    }
+
+    for &size in Size::iter() {
+        for lower in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_lower(
+                        size, lower)));
+        }
+        for upper in 0..3 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_upper(
+                        size, upper)));
+        }
+    }
+    hypotheses
+}
+
+
+#[derive(Debug)]
 pub struct Distribution<H: Hypothesis + Hash + Eq>(HashMap<H, f64>);
 
 impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
@@ -92,12 +132,40 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     }
 
     pub fn value_of_information(&self, study: &Study) -> f64 {
-        let given_the_property = self.updated(study, true);
-        let given_the_negation = self.updated(study, false);
+        let mut entropy = 0.;
+        let mut probability_of_the_property = 0.;
+        let mut probability_of_the_negation = 0.;
+
+        for (&hypothesis, &probability) in self.backing().iter() {
+            if hypothesis.predicts_the_property(study) {
+                probability_of_the_property += probability;
+            } else {
+                probability_of_the_negation += probability;
+            }
+            entropy += -probability * probability.log2();
+        }
+
+        let property_normalization_factor = 1./probability_of_the_property;
+        let negation_normalization_factor = 1./probability_of_the_negation;
+
+        let mut entropy_given_the_property = 0.;
+        let mut entropy_given_the_negation = 0.;
+
+        for (&hypothesis, &probability) in self.backing().iter() {
+            if hypothesis.predicts_the_property(study) {
+                let p = property_normalization_factor * probability;
+                entropy_given_the_property += -p * p.log2();
+            } else {
+                let p = negation_normalization_factor * probability;
+                entropy_given_the_negation += -p * p.log2();
+            }
+        }
+
         let expected_entropy =
-            self.predict(study, true) * given_the_property.entropy() +
-            self.predict(study, false) * given_the_negation.entropy();
-        self.entropy() - expected_entropy
+            probability_of_the_property * entropy_given_the_property +
+            probability_of_the_negation * entropy_given_the_negation;
+
+        entropy - expected_entropy
     }
 
     pub fn burning_question(&self, desired_bits: f64, sample_cap: usize)
@@ -124,10 +192,40 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
 }
 
 
+pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
+                                -> Distribution<JoinedHypothesis> {
+    let mut backing = HashMap::<JoinedHypothesis, f64>::new();
+    let probability_each_basic = (2./3.)/(basic_hypotheses.len() as f64);
+    let probability_each_joined = (1./3.)/(basic_hypotheses.len().pow(2) as f64);
+    for &basic in &basic_hypotheses {
+        backing.insert(JoinedHypothesis::full_stop(basic),
+                       probability_each_basic);
+    }
+    for (i, &one_basic) in basic_hypotheses.iter().enumerate() {
+        for (j, &another_basic) in basic_hypotheses.iter().enumerate() {
+            if j <= i {
+                continue;
+            }
+            let conjunction = JoinedHypothesis::and(one_basic, another_basic);
+            let disjunction = JoinedHypothesis::or(one_basic, another_basic);
+            for &junction in &vec![conjunction, disjunction] {
+                if junction.check_substantiality(50) {
+                    backing.insert(junction, probability_each_joined);
+                }
+            }
+        }
+    }
+    Distribution(backing)
+}
+
+
 #[cfg(test)]
 mod tests {
+    use test::Bencher;
+
     use super::*;
     use triangles::{Color, Size, Stack, Study, Triangle};
+    use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
     use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 
     #[test]
@@ -156,6 +254,83 @@ mod tests {
 
         assert_eq!(probability_c_is_blue, 0.5);
         assert_eq!(probability_c_is_green, 0.5);
+    }
+
+    #[test]
+    fn concerning_soundness_of_our_complexity_penalty() {
+        // ⎲ ∞
+        // ⎳ i=1  1/2^i = 1
+        //
+        // So ... I want to give conjunctions and disjunctions a lower prior
+        // probability, but I'm running into the same philosophical difficulty
+        // that I ran into when I was first sketching out the number game, as
+        // accounted in the README: if the true meaning of the complexity
+        // penalty is that the hypothesis "A" gets to sum over the unspecified
+        // details borne by the more complicated hypotheses "A ∧ B" and "A ∧
+        // C", then it's not clear how this insight translates to this setting,
+        // where we want to represent our knowledge as a collection of mutually
+        // exclusive hypotheses: we don't care about being able to refine a
+        // true-but-vague theory to a true-but-more-precise theory; we want to
+        // say that the precise theory is true and that all others are false.
+        //
+        // Probably the real answer is that this game just isn't very
+        // philosophically interesting: we should have a complexity penalty to
+        // exactly the extent that we think the human property-specifiers the
+        // engine will face are going to choose disjunctions or disjunctions
+        // less often than a uniform sample over distinct hypotheses would.
+        let basics = vec![
+            BasicHypothesis::from(
+                ColorCountBoundednessHypothesis::new_lower(Color::Blue, 1)),
+            BasicHypothesis::from(
+                ColorCountBoundednessHypothesis::new_lower(Color::Red, 1))
+        ];
+        let distribution = complexity_prior(basics);
+
+        assert_eq!(1./3.,
+                   distribution.belief(JoinedHypothesis::full_stop(
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Blue, 1)))));
+        assert_eq!(1./12.,
+                   distribution.belief(JoinedHypothesis::and(
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Blue, 1)),
+                       BasicHypothesis::from(
+                           ColorCountBoundednessHypothesis::new_lower(
+                               Color::Red, 1)))));
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_updating(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.updated(&Study::sample(), true);
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_computing_entropy(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.entropy();
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_prediction(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.predict(&Study::sample(), true);
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_the_value(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.value_of_information(&Study::sample());
+        });
     }
 
 }

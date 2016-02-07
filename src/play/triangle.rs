@@ -1,11 +1,7 @@
 use std::io;
 use std::io::Write;
 
-use triangles::{Color, Size};
-use inference::triangle::{Distribution, Hypothesis};
-use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
-use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
-use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
+use inference::triangle::{complexity_prior, Hypothesis, our_basic_hypotheses};
 
 
 pub fn play() {
@@ -15,42 +11,8 @@ pub fn play() {
              not have the property of satisfying the criterion.",
              env!("CARGO_PKG_VERSION"));
 
-    let mut hypotheses = Vec::new();
-    for &color in Color::iter() {
-        for lower in 1..4 {
-            hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        ColorCountBoundednessHypothesis::new_lower(
-                            color, lower))));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        ColorCountBoundednessHypothesis::new_upper(
-                            color, upper))));
-        }
-    }
-
-    for &size in Size::iter() {
-        for lower in 1..4 {
-            hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        SizeCountBoundednessHypothesis::new_lower(
-                            size, lower))));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                JoinedHypothesis::full_stop(
-                    BasicHypothesis::from(
-                        SizeCountBoundednessHypothesis::new_upper(
-                            size, upper))));
-        }
-    }
-
-    let mut beliefs = Distribution::ignorance_prior(hypotheses);
+    let basic_hypotheses = our_basic_hypotheses();
+    let mut beliefs = complexity_prior(basic_hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
     loop {

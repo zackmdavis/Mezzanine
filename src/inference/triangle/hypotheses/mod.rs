@@ -78,6 +78,23 @@ impl JoinedHypothesis {
         JoinedHypothesis { proposition: first_disjunct,
                            remainder: Remainder::Or(second_disjunct) }
     }
+
+    pub fn check_substantiality(&self, sample_cap: usize) -> bool {
+        let mut falsifiable = false;
+        let mut confirmable = false;
+        for _ in 0..sample_cap {
+            let study = Study::sample();
+            if self.predicts_the_property(&study) {
+                confirmable = true;
+            } else {
+                falsifiable = true;
+            }
+            if falsifiable && confirmable {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 
