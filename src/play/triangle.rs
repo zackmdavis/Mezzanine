@@ -1,46 +1,7 @@
 use std::io;
 use std::io::Write;
 
-use triangles::{Color, Size};
-use inference::triangle::{complexity_prior, Hypothesis};
-use inference::triangle::hypotheses::BasicHypothesis;
-use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
-use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
-
-
-pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
-    let mut hypotheses = Vec::new();
-    for &color in Color::iter() {
-        for lower in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_lower(
-                        color, lower)));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_upper(
-                        color, upper)));
-        }
-    }
-
-    for &size in Size::iter() {
-        for lower in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_lower(
-                        size, lower)));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_upper(
-                        size, upper)));
-        }
-    }
-    hypotheses
-}
+use inference::triangle::{complexity_prior, Hypothesis, our_basic_hypotheses};
 
 
 pub fn play() {

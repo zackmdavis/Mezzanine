@@ -7,14 +7,51 @@ use std::hash::Hash;
 use std::cmp::Eq;
 use std::iter::FromIterator;
 
-use triangles::Study;
+use triangles::{Color, Size, Study};
 use inference::triangle::hypotheses::BasicHypothesis;
 use inference::triangle::hypotheses::JoinedHypothesis;
+use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
+use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 
 
 pub trait Hypothesis {
     fn predicts_the_property(&self, study: &Study) -> bool;
     fn description(&self) -> String;
+}
+
+
+pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
+    let mut hypotheses = Vec::new();
+    for &color in Color::iter() {
+        for lower in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_lower(
+                        color, lower)));
+        }
+        for upper in 0..3 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new_upper(
+                        color, upper)));
+        }
+    }
+
+    for &size in Size::iter() {
+        for lower in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_lower(
+                        size, lower)));
+        }
+        for upper in 0..3 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new_upper(
+                        size, upper)));
+        }
+    }
+    hypotheses
 }
 
 
@@ -103,6 +140,43 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         self.entropy() - expected_entropy
     }
 
+    pub fn fast_value_of_information(&self, study: &Study) -> f64 {
+        let mut entropy = 0.;
+        let mut probability_of_the_property = 0.;
+        let mut probability_of_the_negation = 0.;
+
+        for (&hypothesis, &probability) in self.backing().iter() {
+            if hypothesis.predicts_the_property(study) {
+                probability_of_the_property += probability;
+            } else {
+                probability_of_the_negation += probability;
+            }
+            entropy += -probability * probability.log2();
+        }
+
+        let property_normalization_factor = 1./probability_of_the_property;
+        let negation_normalization_factor = 1./probability_of_the_negation;
+
+        let mut entropy_given_the_property = 0.;
+        let mut entropy_given_the_negation = 0.;
+
+        for (&hypothesis, &probability) in self.backing().iter() {
+            if hypothesis.predicts_the_property(study) {
+                let p = property_normalization_factor * probability;
+                entropy_given_the_property += -p * p.log2();
+            } else {
+                let p = negation_normalization_factor * probability;
+                entropy_given_the_negation += -p * p.log2();
+            }
+        }
+
+        let expected_entropy =
+            probability_of_the_property * entropy_given_the_property +
+            probability_of_the_negation * entropy_given_the_negation;
+
+        entropy - expected_entropy
+    }
+
     pub fn burning_question(&self, desired_bits: f64, sample_cap: usize)
                             -> Study {
         let mut study = Study::sample();
@@ -159,7 +233,6 @@ mod tests {
     use test::Bencher;
 
     use super::*;
-    use play::triangle::our_basic_hypotheses;
     use triangles::{Color, Size, Stack, Study, Triangle};
     use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
     use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
@@ -237,6 +310,17 @@ mod tests {
                                Color::Red, 1)))));
     }
 
+    #[test]
+    fn concerning_trustworthiness_of_information() {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        for _ in 0..5 {
+            let some_study = Study::sample();
+            let ε = (distribution.value_of_information(&some_study) -
+                     distribution.fast_value_of_information(&some_study)).abs();
+            assert!(ε < 0.000000000001);
+        }
+    }
+
     #[bench]
     fn concerning_the_expense_of_updating(bencher: &mut Bencher) {
         let distribution = complexity_prior(our_basic_hypotheses());
@@ -250,6 +334,30 @@ mod tests {
         let distribution = complexity_prior(our_basic_hypotheses());
         bencher.iter(|| {
             distribution.entropy();
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_prediction(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.predict(&Study::sample(), true);
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_the_value(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.value_of_information(&Study::sample());
+        });
+    }
+
+    #[bench]
+    fn concerning_the_true_expense_of_the_value(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.fast_value_of_information(&Study::sample());
         });
     }
 
