@@ -203,10 +203,13 @@ pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
     }
     for &one_basic in &basic_hypotheses {
         for &another_basic in &basic_hypotheses {
-            backing.insert(JoinedHypothesis::and(one_basic, another_basic),
-                           probability_each_joined);
-            backing.insert(JoinedHypothesis::or(one_basic, another_basic),
-                           probability_each_joined);
+            let conjunction = JoinedHypothesis::and(one_basic, another_basic);
+            let disjunction = JoinedHypothesis::or(one_basic, another_basic);
+            for &junction in &vec![conjunction, disjunction] {
+                if junction.check_substantiality(50) {
+                    backing.insert(junction, probability_each_joined);
+                }
+            }
         }
     }
     Distribution(backing)
