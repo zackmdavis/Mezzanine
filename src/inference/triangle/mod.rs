@@ -132,15 +132,6 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
     }
 
     pub fn value_of_information(&self, study: &Study) -> f64 {
-        let given_the_property = self.updated(study, true);
-        let given_the_negation = self.updated(study, false);
-        let expected_entropy =
-            self.predict(study, true) * given_the_property.entropy() +
-            self.predict(study, false) * given_the_negation.entropy();
-        self.entropy() - expected_entropy
-    }
-
-    pub fn fast_value_of_information(&self, study: &Study) -> f64 {
         let mut entropy = 0.;
         let mut probability_of_the_property = 0.;
         let mut probability_of_the_negation = 0.;
@@ -185,13 +176,7 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         let mut top_value = value;
         let mut samples = 1;
         loop {
-            if samples % 250 == 0 { // performance debugging
-                println!("in burning_question loop: sample #{}: {:?}; \
-                          expectibits acquired: {}", samples, study, top_value);
-            }
             if value > top_value {
-                println!("secured more expectibits ({}) on sample #{}: {:?}",
-                         value, samples, top_study); // performance debugging
                 top_value = value;
                 top_study = study;
             }
@@ -310,17 +295,6 @@ mod tests {
                                Color::Red, 1)))));
     }
 
-    #[test]
-    fn concerning_trustworthiness_of_information() {
-        let distribution = complexity_prior(our_basic_hypotheses());
-        for _ in 0..5 {
-            let some_study = Study::sample();
-            let ε = (distribution.value_of_information(&some_study) -
-                     distribution.fast_value_of_information(&some_study)).abs();
-            assert!(ε < 0.000000000001);
-        }
-    }
-
     #[bench]
     fn concerning_the_expense_of_updating(bencher: &mut Bencher) {
         let distribution = complexity_prior(our_basic_hypotheses());
@@ -350,14 +324,6 @@ mod tests {
         let distribution = complexity_prior(our_basic_hypotheses());
         bencher.iter(|| {
             distribution.value_of_information(&Study::sample());
-        });
-    }
-
-    #[bench]
-    fn concerning_the_true_expense_of_the_value(bencher: &mut Bencher) {
-        let distribution = complexity_prior(our_basic_hypotheses());
-        bencher.iter(|| {
-            distribution.fast_value_of_information(&Study::sample());
         });
     }
 
