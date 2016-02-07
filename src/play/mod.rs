@@ -1,5 +1,5 @@
 mod number;
-mod triangle;
+pub mod triangle;
 
 
 use argparse::{ArgumentParser, Store, StoreTrue};

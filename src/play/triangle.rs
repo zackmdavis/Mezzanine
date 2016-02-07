@@ -8,13 +8,7 @@ use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundedn
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 
 
-pub fn play() {
-    wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
-             This program will attempt to efficiently infer the nature of \
-             the criterion by asking you whether specific studies do or do \
-             not have the property of satisfying the criterion.",
-             env!("CARGO_PKG_VERSION"));
-
+pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
     let mut hypotheses = Vec::new();
     for &color in Color::iter() {
         for lower in 1..4 {
@@ -45,8 +39,19 @@ pub fn play() {
                         size, upper)));
         }
     }
+    hypotheses
+}
 
-    let mut beliefs = complexity_prior(hypotheses);
+
+pub fn play() {
+    wrapln!("Welcome to Mezzanine v. {}! Privately think of a criterion. \
+             This program will attempt to efficiently infer the nature of \
+             the criterion by asking you whether specific studies do or do \
+             not have the property of satisfying the criterion.",
+             env!("CARGO_PKG_VERSION"));
+
+    let basic_hypotheses = our_basic_hypotheses();
+    let mut beliefs = complexity_prior(basic_hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
     loop {

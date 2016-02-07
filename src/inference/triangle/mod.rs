@@ -156,7 +156,10 @@ pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
 
 #[cfg(test)]
 mod tests {
+    use test::Bencher;
+
     use super::*;
+    use play::triangle::our_basic_hypotheses;
     use triangles::{Color, Size, Stack, Study, Triangle};
     use inference::triangle::hypotheses::{BasicHypothesis, JoinedHypothesis};
     use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
@@ -232,6 +235,22 @@ mod tests {
                        BasicHypothesis::from(
                            ColorCountBoundednessHypothesis::new_lower(
                                Color::Red, 1)))));
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_updating(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.updated(&Study::sample(), true);
+        });
+    }
+
+    #[bench]
+    fn concerning_the_expense_of_computing_entropy(bencher: &mut Bencher) {
+        let distribution = complexity_prior(our_basic_hypotheses());
+        bencher.iter(|| {
+            distribution.entropy();
+        });
     }
 
 }

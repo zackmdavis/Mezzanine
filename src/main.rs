@@ -1,9 +1,10 @@
-#![feature(iter_arith)]
+#![feature(iter_arith, test)]
 
 extern crate argparse;
 extern crate ansi_term;
 extern crate itertools;
 extern crate rand;
+extern crate test;
 
 #[macro_use] mod display;
 #[macro_use] mod triangles;
