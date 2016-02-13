@@ -48,8 +48,9 @@ pub fn play() {
         let mut verdict_maybe = None;
         while let None = verdict_maybe {
             question_count += 1;
-            print!("Does the study below have the property? [Y/n]\n{}>> ",
-                   study);
+            print!("Does the study below have the property? [Y/n]\n\
+                    {}\n(total pips: {})\n>> ",
+                   study, study.pip_count());
             io::stdout().flush().expect("couldn't flush stdout?!");
             let mut input_buffer = String::new();
             io::stdin()

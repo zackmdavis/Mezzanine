@@ -10,8 +10,12 @@ use std::iter::FromIterator;
 use triangles::{Color, Size, Study};
 use inference::triangle::hypotheses::BasicHypothesis;
 use inference::triangle::hypotheses::JoinedHypothesis;
+
+// TODO: bypass one layer of namespacing by reëxporting these from just
+// inference::triangle::hypotheses?
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
+use inference::triangle::hypotheses::pip_parity::PipParityHypothesis;
 
 
 pub trait Hypothesis {
@@ -63,6 +67,13 @@ pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
                         size, upper)));
         }
     }
+
+    for modulus in 2..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    PipParityHypothesis::new(modulus)));
+    }
+
     hypotheses
 }
 

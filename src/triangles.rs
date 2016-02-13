@@ -35,6 +35,14 @@ impl Size {
         }
     }
 
+    pub fn pips(&self) -> usize {
+        match *self {
+            Size::One => 1,
+            Size::Two => 2,
+            Size::Three => 3
+        }
+    }
+
     pub fn iter() -> slice::Iter<'static, Self> {
         SIZES.iter()
     }
@@ -208,6 +216,10 @@ impl Study {
 
     pub fn size_count(&self, size: Size) -> usize {
         self.into_iter().filter(|t| { t.size == size }).count()
+    }
+
+    pub fn pip_count(&self) -> usize {
+        self.into_iter().map(|t| { t.size.pips() }).sum()
     }
 
     pub fn sample() -> Self {

@@ -1,16 +1,19 @@
 pub mod color_count_boundedness;
 pub mod size_count_boundedness;
+pub mod pip_parity;
 
 use inference::triangle::Hypothesis;
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
+use inference::triangle::hypotheses::pip_parity::PipParityHypothesis;
 use triangles::Study;
 
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum BasicHypothesis {
     ColorCountBoundedness(ColorCountBoundednessHypothesis),
-    SizeCountBoundedness(SizeCountBoundednessHypothesis)
+    SizeCountBoundedness(SizeCountBoundednessHypothesis),
+    PipParity(PipParityHypothesis),
 }
 
 impl From<ColorCountBoundednessHypothesis> for BasicHypothesis {
@@ -25,6 +28,13 @@ impl From<SizeCountBoundednessHypothesis> for BasicHypothesis {
     }
 }
 
+impl From<PipParityHypothesis> for BasicHypothesis {
+    fn from(h: PipParityHypothesis) -> Self {
+        BasicHypothesis::PipParity(h)
+    }
+}
+
+
 impl BasicHypothesis {
     pub fn obviates(&self, other: &BasicHypothesis) -> bool {
         match *self {
@@ -38,6 +48,10 @@ impl BasicHypothesis {
                 BasicHypothesis::SizeCountBoundedness(h2) => {
                     h1.size == h2.size
                 },
+                _ => false
+            },
+            BasicHypothesis::PipParity(_h1) => match *other {
+                BasicHypothesis::PipParity(_h2) => true,
                 _ => false
             }
         }
@@ -54,13 +68,16 @@ impl Hypothesis for BasicHypothesis {
             BasicHypothesis::ColorCountBoundedness(h) =>
                 h.predicts_the_property(study),
             BasicHypothesis::SizeCountBoundedness(h) =>
-                h.predicts_the_property(study)
+                h.predicts_the_property(study),
+            BasicHypothesis::PipParity(h) =>
+                h.predicts_the_property(study),
         }
     }
     fn description(&self) -> String {
         match *self {
             BasicHypothesis::ColorCountBoundedness(h) => h.description(),
-            BasicHypothesis::SizeCountBoundedness(h) => h.description()
+            BasicHypothesis::SizeCountBoundedness(h) => h.description(),
+            BasicHypothesis::PipParity(h) => h.description(),
         }
     }
 }
