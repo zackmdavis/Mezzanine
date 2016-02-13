@@ -4,8 +4,10 @@ pub mod hypotheses;
 
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::cmp::Eq;
+use std::cmp::{Eq, Ordering};
 use std::iter::FromIterator;
+
+use ansi_term::Style;
 
 use triangles::{Color, Size, Study};
 use inference::triangle::hypotheses::BasicHypothesis;
@@ -211,6 +213,19 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
             samples += 1;
         }
         top_study
+    }
+
+    pub fn confess(&self, n: usize) {
+        let mut backing = self.backing().iter().collect::<Vec<_>>();
+        backing.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap_or(Ordering::Equal));
+        let total_probability_mass: f64 = backing.iter()
+            .map(|hp| { hp.1 }).sum();
+        println!("Total probability mass: {:.6}", total_probability_mass);
+        println!("Top {} hypotheses:", n);
+        for &(&hypothesis, &probability) in backing.iter().take(n) {
+            wrapln!(" * {}: {}", hypothesis.description(),
+                    Style::new().bold().paint(&format!("{:.4}", probability)));
+        }
     }
 }
 
