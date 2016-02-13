@@ -26,14 +26,18 @@ impl From<SizeCountBoundednessHypothesis> for BasicHypothesis {
 }
 
 impl BasicHypothesis {
-    pub fn is_same_type(&self, other: &BasicHypothesis) -> bool {
+    pub fn obviates(&self, other: &BasicHypothesis) -> bool {
         match *self {
-            BasicHypothesis::ColorCountBoundedness(_h) => match *other {
-                BasicHypothesis::ColorCountBoundedness(_h) => true,
+            BasicHypothesis::ColorCountBoundedness(h1) => match *other {
+                BasicHypothesis::ColorCountBoundedness(h2) => {
+                    h1.color == h2.color
+                },
                 _ => false
             },
-            BasicHypothesis::SizeCountBoundedness(_h) => match *other {
-                BasicHypothesis::SizeCountBoundedness(_h) => true,
+            BasicHypothesis::SizeCountBoundedness(h1) => match *other {
+                BasicHypothesis::SizeCountBoundedness(h2) => {
+                    h1.size == h2.size
+                },
                 _ => false
             }
         }
