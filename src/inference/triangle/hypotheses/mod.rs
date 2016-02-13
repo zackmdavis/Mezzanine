@@ -25,6 +25,21 @@ impl From<SizeCountBoundednessHypothesis> for BasicHypothesis {
     }
 }
 
+impl BasicHypothesis {
+    pub fn is_same_type(&self, other: &BasicHypothesis) -> bool {
+        match *self {
+            BasicHypothesis::ColorCountBoundedness(_h) => match *other {
+                BasicHypothesis::ColorCountBoundedness(_h) => true,
+                _ => false
+            },
+            BasicHypothesis::SizeCountBoundedness(_h) => match *other {
+                BasicHypothesis::SizeCountBoundedness(_h) => true,
+                _ => false
+            }
+        }
+    }
+}
+
 
 impl Hypothesis for BasicHypothesis {
     // XXX: the amount of boilerplate quasi-duplicated code in this project is
