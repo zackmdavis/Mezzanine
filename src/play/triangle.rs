@@ -15,16 +15,23 @@ pub fn play() {
     let mut beliefs = complexity_prior(basic_hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 
+    let initial_entropy = beliefs.entropy();
+    let mut question_count = 0;
+
     loop {
         let study = beliefs.burning_question(0.95, 10000);
         let value_of_continuing = beliefs.value_of_information(&study);
         if value_of_continuing == 0.0 {
+            wrapln!("After asking {} questions (from an initial state \
+                     of {:.3}-bit uncertainty),\n",
+                    question_count, initial_entropy);
+
             if beliefs.len() == 1 {
-                wrapln!("This program infers that a study has the \
+                wrapln!("this program infers that a study has the \
                          property iff {}.",
                         beliefs.hypotheses()[0].description());
             } else {
-                wrapln!("This program has inferred all that it can, and \
+                wrapln!("this program has inferred all that it can, and \
                          is indifferent between the following hypotheses \
                          concerning when a study has the property:");
                 for hypothesis in beliefs.hypotheses() {
@@ -40,6 +47,7 @@ pub fn play() {
                 beliefs.len(), beliefs.entropy(), value_of_continuing);
         let mut verdict_maybe = None;
         while let None = verdict_maybe {
+            question_count += 1;
             print!("Does the study below have the property? [Y/n]\n{}>> ",
                    study);
             io::stdout().flush().expect("couldn't flush stdout?!");
