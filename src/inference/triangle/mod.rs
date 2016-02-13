@@ -23,6 +23,12 @@ pub trait Hypothesis {
 pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
     let mut hypotheses = Vec::new();
     for &color in Color::iter() {
+        for exact in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    ColorCountBoundednessHypothesis::new(
+                        color, exact, exact)));
+        }
         for lower in 1..4 {
             hypotheses.push(
                 BasicHypothesis::from(
@@ -38,6 +44,12 @@ pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
     }
 
     for &size in Size::iter() {
+        for exact in 1..4 {
+            hypotheses.push(
+                BasicHypothesis::from(
+                    SizeCountBoundednessHypothesis::new(
+                        size, exact, exact)));
+        }
         for lower in 1..4 {
             hypotheses.push(
                 BasicHypothesis::from(

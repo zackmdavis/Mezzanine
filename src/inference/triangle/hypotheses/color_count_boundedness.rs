@@ -55,6 +55,14 @@ impl Hypothesis for ColorCountBoundednessHypothesis {
     fn description(&self) -> String {
         let mut described: Vec<String> = vec![
             format!("the number of {:?} triangles", self.color)];
+
+        // exceptional case for exactness
+        if self.lower.is_some() && self.upper.is_some() &&
+            self.lower.unwrap() == self.upper.unwrap() {
+                described.push(format!("is exactly {}", self.lower.unwrap()));
+                return described.join(" ");
+        }
+
         if let Some(min) = self.lower {
             described.push(format!("is not less than {}", min));
         }
