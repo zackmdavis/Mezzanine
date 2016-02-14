@@ -215,7 +215,7 @@ impl<H: Hypothesis + Hash + Eq + Copy> Distribution<H> {
         top_study
     }
 
-    pub fn confess(&self, n: usize) {
+    pub fn inspect(&self, n: usize) {
         let mut backing = self.backing().iter().collect::<Vec<_>>();
         backing.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap_or(Ordering::Equal));
         let total_probability_mass: f64 = backing.iter()

@@ -48,7 +48,7 @@ pub fn play() {
         let mut verdict_maybe = None;
         while let None = verdict_maybe {
             question_count += 1;
-            print!("Does the study below have the property? [Y/n/confess]\n\
+            print!("Does the study below have the property? [Y/n/inspect]\n\
                     {}\n(total pips: {})\n>> ",
                    study, study.pip_count());
             io::stdout().flush().expect("couldn't flush stdout?!");
@@ -59,8 +59,8 @@ pub fn play() {
             verdict_maybe = match input_buffer.chars().nth(0) {
                 Some('Y') | Some('y') => Some(true),
                 Some('N') | Some('n') => Some(false),
-                Some('C') | Some('c') => {
-                    beliefs.confess(20);
+                Some('I') | Some('i') => {
+                    beliefs.inspect(20);
                     continue;
                 }
                 _ => {
