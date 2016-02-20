@@ -73,8 +73,9 @@ pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
     for modulus in 2..4 {
             hypotheses.push(
                 BasicHypothesis::from(
-                    PipParityHypothesis::new(modulus)));
+                    PipParityHypothesis::new(modulus, 0)));
     }
+    hypotheses.push(BasicHypothesis::from(PipParityHypothesis::new(2, 1)));
 
     hypotheses
 }
