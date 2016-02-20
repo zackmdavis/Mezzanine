@@ -2,7 +2,6 @@
 
 extern crate argparse;
 extern crate ansi_term;
-extern crate itertools;
 extern crate rand;
 extern crate test;
 
