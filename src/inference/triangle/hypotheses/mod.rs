@@ -1,6 +1,7 @@
 pub mod color_count_boundedness;
 pub mod size_count_boundedness;
 pub mod pip_parity;
+pub mod standard_basics;
 
 use inference::triangle::Hypothesis;
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;

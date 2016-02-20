@@ -1,7 +1,8 @@
 use std::io;
 use std::io::Write;
 
-use inference::triangle::{complexity_prior, Hypothesis, our_basic_hypotheses};
+use inference::triangle::{complexity_prior, Hypothesis,
+                          standard_basic_hypotheses};
 
 
 pub fn play() {
@@ -11,7 +12,7 @@ pub fn play() {
              not have the property of satisfying the criterion.",
              env!("CARGO_PKG_VERSION"));
 
-    let basic_hypotheses = our_basic_hypotheses();
+    let basic_hypotheses = standard_basic_hypotheses();
     let mut beliefs = complexity_prior(basic_hypotheses);
     println!("Size of hypothesis space: {}", beliefs.len());
 

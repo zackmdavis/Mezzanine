@@ -9,75 +9,14 @@ use std::iter::FromIterator;
 
 use ansi_term::Style;
 
-use triangles::{Color, Size, Study};
+use triangles::Study;
 use inference::triangle::hypotheses::BasicHypothesis;
 use inference::triangle::hypotheses::JoinedHypothesis;
-
-// TODO: bypass one layer of namespacing by reëxporting these from just
-// inference::triangle::hypotheses?
-use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
-use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
-use inference::triangle::hypotheses::pip_parity::PipParityHypothesis;
-
+pub use inference::triangle::hypotheses::standard_basics::standard_basic_hypotheses;
 
 pub trait Hypothesis {
     fn predicts_the_property(&self, study: &Study) -> bool;
     fn description(&self) -> String;
-}
-
-
-pub fn our_basic_hypotheses() -> Vec<BasicHypothesis> {
-    let mut hypotheses = Vec::new();
-    for &color in Color::iter() {
-        for exact in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new(
-                        color, exact, exact)));
-        }
-        for lower in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_lower(
-                        color, lower)));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    ColorCountBoundednessHypothesis::new_upper(
-                        color, upper)));
-        }
-    }
-
-    for &size in Size::iter() {
-        for exact in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new(
-                        size, exact, exact)));
-        }
-        for lower in 1..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_lower(
-                        size, lower)));
-        }
-        for upper in 0..3 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    SizeCountBoundednessHypothesis::new_upper(
-                        size, upper)));
-        }
-    }
-
-    for modulus in 2..4 {
-            hypotheses.push(
-                BasicHypothesis::from(
-                    PipParityHypothesis::new(modulus, 0)));
-    }
-    hypotheses.push(BasicHypothesis::from(PipParityHypothesis::new(2, 1)));
-
-    hypotheses
 }
 
 
@@ -345,7 +284,7 @@ mod tests {
 
     #[bench]
     fn concerning_the_expense_of_updating(bencher: &mut Bencher) {
-        let distribution = complexity_prior(our_basic_hypotheses());
+        let distribution = complexity_prior(standard_basic_hypotheses());
         bencher.iter(|| {
             distribution.updated(&Study::sample(), true);
         });
@@ -353,7 +292,7 @@ mod tests {
 
     #[bench]
     fn concerning_the_expense_of_computing_entropy(bencher: &mut Bencher) {
-        let distribution = complexity_prior(our_basic_hypotheses());
+        let distribution = complexity_prior(standard_basic_hypotheses());
         bencher.iter(|| {
             distribution.entropy();
         });
@@ -361,7 +300,7 @@ mod tests {
 
     #[bench]
     fn concerning_the_expense_of_prediction(bencher: &mut Bencher) {
-        let distribution = complexity_prior(our_basic_hypotheses());
+        let distribution = complexity_prior(standard_basic_hypotheses());
         bencher.iter(|| {
             distribution.predict(&Study::sample(), true);
         });
@@ -369,7 +308,7 @@ mod tests {
 
     #[bench]
     fn concerning_the_expense_of_the_value(bencher: &mut Bencher) {
-        let distribution = complexity_prior(our_basic_hypotheses());
+        let distribution = complexity_prior(standard_basic_hypotheses());
         bencher.iter(|| {
             distribution.value_of_information(&Study::sample());
         });
