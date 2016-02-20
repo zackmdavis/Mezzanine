@@ -117,18 +117,16 @@ pub fn pack_blocks_horizontally(left_block: &str,
 
     let mut packed = String::new();
     for (semiline, cosemiline)
-        in gravitationally_pad_block(left_block.trim_right(),
-                                     grand_height, left_width)
+        in gravitationally_pad_block(left_block, grand_height, left_width)
         .split('\n')
-        .zip(gravitationally_pad_block(right_block.trim_right(),
-                                       grand_height, right_width)
+        .zip(gravitationally_pad_block(right_block, grand_height, right_width)
              .split('\n')) {
             packed.push_str(semiline);
             packed.push_str(cosemiline);
             packed.push('\n');
         }
     packed.pop();
-    packed
+    packed.trim_right().to_owned()
 }
 
 

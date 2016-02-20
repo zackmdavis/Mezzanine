@@ -1,6 +1,6 @@
 [package]
 name = "mezzanine"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Zack M. Davis <code@zackmdavis.net>"]
 
 [dependencies]
