@@ -4,6 +4,7 @@ use inference::triangle::hypotheses::BasicHypothesis;
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
 use inference::triangle::hypotheses::groundedness_count_boundedness::GroundednessCountBoundednessHypothesis;
+use inference::triangle::hypotheses::pip_boundedness::PipBoundednessHypothesis;
 use inference::triangle::hypotheses::pip_parity::PipParityHypothesis;
 
 pub fn standard_basic_hypotheses() -> Vec<BasicHypothesis> {
@@ -83,6 +84,18 @@ pub fn standard_basic_hypotheses() -> Vec<BasicHypothesis> {
                     GroundednessCountBoundednessHypothesis::new_upper(
                         groundedness, upper)));
         }
+    }
+
+    for pip_count in 4..16 {
+        hypotheses.push(
+            BasicHypothesis::from(
+                PipBoundednessHypothesis::exactly(pip_count)));
+        hypotheses.push(
+            BasicHypothesis::from(
+                PipBoundednessHypothesis::at_least(pip_count)));
+        hypotheses.push(
+            BasicHypothesis::from(
+                PipBoundednessHypothesis::at_most(pip_count)));
     }
 
     for modulus in 2..6 {

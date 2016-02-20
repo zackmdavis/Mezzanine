@@ -184,8 +184,9 @@ pub fn complexity_prior(basic_hypotheses: Vec<BasicHypothesis>)
             if j <= i {
                 continue;
             }
-            if one_basic.obviates(&another_basic) {
-                continue;
+            if one_basic.obviates(&another_basic) ||
+                another_basic.obviates(&one_basic) {
+                    continue;
             }
             let conjunction = JoinedHypothesis::and(one_basic, another_basic);
             let disjunction = JoinedHypothesis::or(one_basic, another_basic);

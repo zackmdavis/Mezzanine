@@ -41,6 +41,10 @@ Standard hypothesis complement:
    * not more than _n_ grounded triangles for 1 ≤ _n_ ≤ 2
    * at least _n_ ungrounded triangles for 1 ≤ _n_ ≤ 3
    * not more than _n_ ungrounded triangles for 0 ≤ _n_ ≤ 2
+ * pip count boundedness hypotheses—
+   * total pip count is exactly _n_ for 4 ≤ _n_ ≤ 16
+   * total pip count is at least _n_ for 4 ≤ _n_ ≤ 16
+   * total pip count is at most _n_ for 4 ≤ _n_ ≤ 16
  * pip parity hypotheses—
    * total pip count is even or odd
    * total pip count is divisible by 3, 4, or 5
