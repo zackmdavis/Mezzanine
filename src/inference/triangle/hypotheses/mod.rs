@@ -1,12 +1,15 @@
 pub mod color_count_boundedness;
 pub mod size_count_boundedness;
+pub mod groundedness_count_boundedness;
 pub mod pip_parity;
 pub mod standard_basics;
 
 use inference::triangle::Hypothesis;
 use inference::triangle::hypotheses::color_count_boundedness::ColorCountBoundednessHypothesis;
 use inference::triangle::hypotheses::size_count_boundedness::SizeCountBoundednessHypothesis;
+use inference::triangle::hypotheses::groundedness_count_boundedness::GroundednessCountBoundednessHypothesis;
 use inference::triangle::hypotheses::pip_parity::PipParityHypothesis;
+
 use triangles::Study;
 
 
@@ -14,6 +17,7 @@ use triangles::Study;
 pub enum BasicHypothesis {
     ColorCountBoundedness(ColorCountBoundednessHypothesis),
     SizeCountBoundedness(SizeCountBoundednessHypothesis),
+    GroundednessCountBoundedness(GroundednessCountBoundednessHypothesis),
     PipParity(PipParityHypothesis),
 }
 
@@ -26,6 +30,12 @@ impl From<ColorCountBoundednessHypothesis> for BasicHypothesis {
 impl From<SizeCountBoundednessHypothesis> for BasicHypothesis {
     fn from(h: SizeCountBoundednessHypothesis) -> Self {
         BasicHypothesis::SizeCountBoundedness(h)
+    }
+}
+
+impl From<GroundednessCountBoundednessHypothesis> for BasicHypothesis {
+    fn from(h: GroundednessCountBoundednessHypothesis) -> Self {
+        BasicHypothesis::GroundednessCountBoundedness(h)
     }
 }
 
@@ -51,6 +61,12 @@ impl BasicHypothesis {
                 },
                 _ => false
             },
+            BasicHypothesis::GroundednessCountBoundedness(h1) => match *other {
+                BasicHypothesis::GroundednessCountBoundedness(h2) => {
+                    h1.grounded == h2.grounded
+                },
+                _ => false
+            },
             BasicHypothesis::PipParity(_h1) => match *other {
                 BasicHypothesis::PipParity(_h2) => true,
                 _ => false
@@ -70,6 +86,8 @@ impl Hypothesis for BasicHypothesis {
                 h.predicts_the_property(study),
             BasicHypothesis::SizeCountBoundedness(h) =>
                 h.predicts_the_property(study),
+            BasicHypothesis::GroundednessCountBoundedness(h) =>
+                h.predicts_the_property(study),
             BasicHypothesis::PipParity(h) =>
                 h.predicts_the_property(study),
         }
@@ -78,6 +96,7 @@ impl Hypothesis for BasicHypothesis {
         match *self {
             BasicHypothesis::ColorCountBoundedness(h) => h.description(),
             BasicHypothesis::SizeCountBoundedness(h) => h.description(),
+            BasicHypothesis::GroundednessCountBoundedness(h) => h.description(),
             BasicHypothesis::PipParity(h) => h.description(),
         }
     }

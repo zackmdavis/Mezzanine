@@ -27,14 +27,23 @@ But then where do my uneven prior probabilities come from, if anywhere?
 
 Standard hypothesis complement:
 
- * exactly _n_ triangles of color _c_ for 1 ≤ _n_ ≤ 3
- * at least _n_ triangles of color _c_ for 1 ≤ _n_ ≤ 3
- * not more than _n_ triangles of color _c_ for 0 ≤ _n_ ≤ 2
- * exactly _n_ triangles of size _s_ for 1 ≤ _n_ ≤ 3
- * at least _n_ triangles of size _s_ for 1 ≤ _n_ ≤ 3
- * not more than _n_ triangles of size _s_ for 0 ≤ _n_ ≤ 2
- * total pip count is even or odd
- * total pip count is divisible by 3, 4, or 5
+ * color count boundedness hypotheses—
+   * exactly _n_ triangles of color _c_ for 1 ≤ _n_ ≤ 3
+   * at least _n_ triangles of color _c_ for 1 ≤ _n_ ≤ 3
+   * not more than _n_ triangles of color _c_ for 0 ≤ _n_ ≤ 2
+ * size count boundedness hypotheses—
+   * exactly _n_ triangles of size _s_ for 1 ≤ _n_ ≤ 3
+   * at least _n_ triangles of size _s_ for 1 ≤ _n_ ≤ 3
+   * not more than _n_ triangles of size _s_ for 0 ≤ _n_ ≤ 2
+ * groundedness count boundedness hypotheses—
+   * exactly _n_ un/grounded triangles for 1 ≤ _n_ ≤ 3
+   * at least _n_ grounded triangles for 2 ≤ _n_ ≤ 3
+   * not more than _n_ grounded triangles for 1 ≤ _n_ ≤ 2
+   * at least _n_ ungrounded triangles for 1 ≤ _n_ ≤ 3
+   * not more than _n_ ungrounded triangles for 0 ≤ _n_ ≤ 2
+ * pip parity hypotheses—
+   * total pip count is even or odd
+   * total pip count is divisible by 3, 4, or 5
 
 _also_—
 

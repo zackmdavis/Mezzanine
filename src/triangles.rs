@@ -222,6 +222,18 @@ impl Study {
         self.into_iter().map(|t| { t.size.pips() }).sum()
     }
 
+    pub fn groundedness_count(&self, grounded: bool) -> usize {
+        let nonempty_stacks = self.stacks.iter()
+            .filter(|&s| { !s.triangles.is_empty() })
+            .count();
+        if grounded {
+            nonempty_stacks
+        } else {
+            let triangle_count = self.into_iter().count();
+            triangle_count - nonempty_stacks
+        }
+    }
+
     pub fn sample() -> Self {
         // Again, a uniform distribution over stack count is nonuniform over
         // possible studies; we think it's fine!
