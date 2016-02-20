@@ -133,8 +133,7 @@ pub fn pack_blocks_horizontally(left_block: &str,
 #[cfg(test)]
 mod tests {
     use ansi_term;
-    use super::{block_dimensions, visualen, pack_blocks_horizontally,
-                pack_blocks_vertically};
+    use super::{block_dimensions, visualen, pack_blocks_vertically};
 
     #[test]
     fn concerning_text_block_dimensions() {

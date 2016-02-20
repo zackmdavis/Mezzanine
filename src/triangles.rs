@@ -64,8 +64,6 @@ pub enum Color {
 pub static COLORS: [Color; 4] = [
     Color::Red, Color::Blue, Color::Green, Color::Yellow];
 
-// TODO: `impl`ement fmt::Display for Color
-
 impl Color {
     fn to_colorizer(&self) -> ansi_term::Colour {
         match *self {
