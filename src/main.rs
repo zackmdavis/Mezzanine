@@ -1,4 +1,4 @@
-#![feature(iter_arith, non_ascii_idents, test)]
+#![feature(non_ascii_idents, test)]
 
 extern crate argparse;
 extern crate ansi_term;
