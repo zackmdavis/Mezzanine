@@ -307,7 +307,7 @@ mod tests {
     fn concerning_the_expense_of_computing_entropy(bencher: &mut Bencher) {
         let distribution = complexity_prior(standard_basic_hypotheses());
         bencher.iter(|| {
-            distribution.entropy();
+            distribution.entropy()
         });
     }
 
